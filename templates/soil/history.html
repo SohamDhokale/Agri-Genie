@@ -1,0 +1,56 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Soil Test History{% endblock %}
+
+{% block content %}
+<div class="pt-3 pb-2 mb-3 border-bottom d-flex align-items-center justify-content-between">
+    <h2 class="h4 mb-0">Soil Test History</h2>
+    <a href="{% url 'soil_test' %}" class="btn btn-primary">New Test</a>
+</div>
+
+{% if tests %}
+    <div class="row">
+        {% for test in tests %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">Test #{{ test.id }}</h6>
+                        <span class="badge bg-{{ test.quality_rating|yesno:'success,warning,danger' }}">
+                            {{ test.get_quality_rating_display }}
+                        </span>
+                    </div>
+                    <p class="card-text small text-muted">
+                        {{ test.created_at|date:"M d, Y" }}
+                    </p>
+                    <div class="row g-2 small">
+                        <div class="col-6">
+                            <strong>pH:</strong> {{ test.ph_value }}
+                        </div>
+                        <div class="col-6">
+                            <strong>N:</strong> {{ test.nitrogen }}
+                        </div>
+                        <div class="col-6">
+                            <strong>P:</strong> {{ test.phosphorus }}
+                        </div>
+                        <div class="col-6">
+                            <strong>K:</strong> {{ test.potassium }}
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <strong>Quality Index:</strong> {{ test.quality_index }}
+                    </div>
+                    <a href="{% url 'soil_report' test.id %}" class="btn btn-sm btn-outline-primary mt-2">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-0">No soil tests found. Start your first test!</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

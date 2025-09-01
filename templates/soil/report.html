@@ -1,0 +1,73 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Soil Test Report{% endblock %}
+
+{% block content %}
+<div class="pt-3 pb-2 mb-3 border-bottom">
+    <h2 class="h4 mb-0">Soil Test Report</h2>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Test Results</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <strong>pH Value:</strong> {{ soil_test.ph_value }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Nitrogen:</strong> {{ soil_test.nitrogen }} kg/ha
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Phosphorus:</strong> {{ soil_test.phosphorus }} kg/ha
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Potassium:</strong> {{ soil_test.potassium }} kg/ha
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Moisture:</strong> {{ soil_test.moisture }}%
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Humidity:</strong> {{ soil_test.humidity }}%
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Organic Matter:</strong> {{ soil_test.organic_matter }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Quality Assessment</h5>
+                <div class="text-center">
+                    <div class="fs-1 text-{{ soil_test.quality_rating|yesno:'success,warning,danger' }}">
+                        {{ soil_test.quality_index }}
+                    </div>
+                    <div class="text-muted">Quality Index</div>
+                    <div class="badge bg-{{ soil_test.quality_rating|yesno:'success,warning,danger' }} mt-2">
+                        {{ soil_test.get_quality_rating_display }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if soil_test.recommendations %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Recommendations</h5>
+                <p class="card-text">{{ soil_test.recommendations }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'soil_test' %}" class="btn btn-primary">New Test</a>
+    <a href="{% url 'soil_history' %}" class="btn btn-secondary">View History</a>
+</div>
+{% endblock %}

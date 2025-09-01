@@ -1,0 +1,222 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Soil PDF Tools{% endblock %}
+
+{% block content %}
+<div class="pt-3 pb-2 mb-3 border-bottom d-flex align-items-center justify-content-between">
+    <h2 class="h4 mb-0">Soil PDF Tools</h2>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card mb-3">
+            <div class="card-header">1) Generate Coordinate Grid</div>
+            <div class="card-body">
+                <form id="gridForm">
+                    <div class="mb-3">
+                        <label class="form-label">Template PDF (soil test form)</label>
+                        <input type="file" name="template" class="form-control" accept="application/pdf" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Grid size (points)</label>
+                        <input type="number" name="grid_size" class="form-control" value="50" min="10" step="5">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generate Grid PDF</button>
+                </form>
+                <div class="mt-2 small text-muted">Use the grid PDF to read coordinates for each field you want to fill.</div>
+            </div>
+        </div>
+        
+        <div class="card mb-3">
+            <div class="card-header bg-info text-white">3) OCR PDF to Auto-Fill Form</div>
+            <div class="card-body">
+                <form id="ocrForm">
+                    <div class="mb-3">
+                        <label class="form-label">Upload Soil Report PDF</label>
+                        <input type="file" name="pdf" class="form-control" accept="application/pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-info">Extract Data with OCR</button>
+                </form>
+                <div class="mt-3" id="ocrResults" style="display: none;">
+                    <h6 class="border-bottom pb-2 mb-2">Extracted Data</h6>
+                    <div class="mb-2">
+                        <div id="extractedPreview" class="small bg-light p-2 mb-2" style="max-height: 100px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="mb-3">
+                        <h6>Detected Values:</h6>
+                        <div id="extractedData" class="small"></div>
+                    </div>
+                    <button id="useExtractedData" class="btn btn-sm btn-success">Use This Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card mb-3">
+            <div class="card-header">2) Fill Soil Report</div>
+            <div class="card-body">
+                <form id="fillForm">
+                    <div class="mb-3">
+                        <label class="form-label">Template PDF</label>
+                        <input type="file" name="template" class="form-control" accept="application/pdf" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Field Mapping (JSON: { field: {x, y} })</label>
+                        <textarea name="mapping" class="form-control" rows="5" placeholder='{"sample_id": {"x": 100, "y": 650}, "ph_level": {"x": 100, "y": 600}}' required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Soil Data (JSON)</label>
+                        <textarea id="soilDataInput" name="data" class="form-control" rows="5" placeholder='{"sample_id": "ST-2023-001", "ph_level": "6.5"}' required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success">Generate Filled PDF</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function downloadBlob(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+// Store extracted data for later use
+let extractedOcrData = {};
+
+document.getElementById('gridForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const form = e.target;
+    const fd = new FormData(form);
+    const r = await fetch('{% url "soil_pdf_grid" %}', { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd });
+    if (!r.ok){ alert('Failed to generate grid'); return; }
+    const blob = await r.blob();
+    downloadBlob(blob, 'template_with_grid.pdf');
+});
+
+document.getElementById('ocrForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+        
+        const fd = new FormData(form);
+        const r = await fetch('{% url "soil_pdf_ocr" %}', { 
+            method: 'POST', 
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }, 
+            body: fd 
+        });
+        
+        if (!r.ok) {
+            const errorData = await r.json();
+            throw new Error(errorData.error || 'Failed to process PDF');
+        }
+        
+        const data = await r.json();
+        
+        // Display results
+        document.getElementById('ocrResults').style.display = 'block';
+        document.getElementById('extractedPreview').textContent = data.extracted_text || 'No text extracted';
+        
+        // Display extracted data
+        const extractedDataEl = document.getElementById('extractedData');
+        extractedDataEl.innerHTML = '';
+        
+        if (Object.keys(data.extracted_data).length === 0) {
+            extractedDataEl.innerHTML = '<div class="text-muted">No soil data values detected</div>';
+        } else {
+            extractedOcrData = data.extracted_data; // Store for later use
+            
+            const table = document.createElement('table');
+            table.className = 'table table-sm';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            
+            for (const [key, value] of Object.entries(data.extracted_data)) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${key}</td>
+                    <td>${value}</td>
+                `;
+                table.querySelector('tbody').appendChild(row);
+            }
+            
+            extractedDataEl.appendChild(table);
+        }
+    } catch (error) {
+        alert(`Error: ${error.message}`);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+document.getElementById('useExtractedData').addEventListener('click', () => {
+    // Get current data from the soil data input
+    let currentData = {};
+    try {
+        const currentValue = document.getElementById('soilDataInput').value.trim();
+        if (currentValue) {
+            currentData = JSON.parse(currentValue);
+        }
+    } catch (e) {
+        // If parsing fails, start with empty object
+        currentData = {};
+    }
+    
+    // Merge with extracted data (extracted data takes precedence)
+    const mergedData = { ...currentData, ...extractedOcrData };
+    
+    // Update the soil data input
+    document.getElementById('soilDataInput').value = JSON.stringify(mergedData, null, 2);
+    
+    // Show success message
+    alert('Data from OCR has been added to the form!');
+});
+
+document.getElementById('fillForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const form = e.target;
+    const fd = new FormData(form);
+    const r = await fetch('{% url "soil_pdf_fill" %}', { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') }, body: fd });
+    if (!r.ok){ alert('Failed to generate filled PDF'); return; }
+    const blob = await r.blob();
+    downloadBlob(blob, 'filled_soil_report.pdf');
+});
+</script>
+{% endblock %}

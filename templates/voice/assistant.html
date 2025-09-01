@@ -1,0 +1,605 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Voice Assistant{% endblock %}
+
+{% block content %}
+<div class="assistant-hero">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h2 class="hero-title"><i class="fas fa-robot me-2"></i>AgriGenie Voice Assistant</h2>
+                <p class="hero-subtitle">Speak naturally. Get instant, actionable farming advice.</p>
+            </div>
+            <div class="hero-badges d-none d-md-flex">
+                <span class="badge rounded-pill bg-success-soft">Multilingual</span>
+                <span class="badge rounded-pill bg-primary-soft ms-2">AI Powered</span>
+                <span class="badge rounded-pill bg-warning-soft ms-2">Voice First</span>
+            </div>
+        </div>
+    </div>
+ </div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Voice Recording Interface -->
+        <div class="card modern-card mb-4">
+            <div class="card-body text-center p-4">
+                <h5 class="card-title">Voice Commands</h5>
+                <p class="card-text">Click the microphone button and speak your command, or type your command below</p>
+                
+                <!-- Recognition language selector -->
+                <div class="row g-2 mb-3 align-items-center justify-content-center">
+                    <div class="col-auto">
+                        <label for="recognitionLang" class="col-form-label small text-muted">Mic language</label>
+                    </div>
+                    <div class="col-auto">
+                        <select id="recognitionLang" class="form-select form-select-sm">
+                            <option value="auto" selected>Auto (browser)</option>
+                            <option value="en-IN">English (India)</option>
+                            <option value="en-US">English (US)</option>
+                            <option value="hi-IN">Hindi (India)</option>
+                            <option value="ta-IN">Tamil (India)</option>
+                            <option value="te-IN">Telugu (India)</option>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button id="micPermissionBtn" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-microphone"></i> Enable Mic
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Text Input for Demo Mode -->
+                <div class="mb-3">
+                    <div class="input-group">
+                        <input type="text" id="commandInput" class="form-control" placeholder="Type your command here (e.g., 'Show me weather')">
+                        <button id="sendCommandBtn" class="btn btn-success">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mb-4 d-flex justify-content-center gap-3">
+                    <button id="recordButton" class="btn mic-btn btn-lg rounded-circle">
+                        <i class="fas fa-microphone fa-2x"></i>
+                    </button>
+                    <button id="stopButton" class="btn stop-btn btn-lg rounded-circle" style="display: none;">
+                        <i class="fas fa-stop fa-2x"></i>
+                    </button>
+                </div>
+                
+                <div id="recordingStatus" class="alert alert-info" style="display: none;">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Recording... Speak now!
+                </div>
+                
+                <div id="processingStatus" class="alert alert-warning" style="display: none;">
+                    <i class="fas fa-cog fa-spin me-2"></i>
+                    Processing your command...
+                </div>
+                
+                                 <div id="demoModeAlert" class="alert alert-success">
+                     <i class="fas fa-microphone me-2"></i>
+                     <strong>Voice Recognition Active:</strong> Click the microphone button and speak your command, or type in the text box above.
+                 </div>
+                 
+                 <div id="browserSupportAlert" class="alert alert-warning" style="display: none;">
+                     <i class="fas fa-exclamation-triangle me-2"></i>
+                     <strong>Browser Support:</strong> Speech recognition may not work in all browsers. If you encounter issues, please use the text input or try Chrome/Edge.
+                 </div>
+            </div>
+        </div>
+
+        <!-- Response Display -->
+        <div class="card modern-card mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title">Assistant Response</h5>
+                <div id="responseArea" class="response-area">
+                    <p class="text-muted text-center">Your response will appear here...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hindi Assistant (Text + TTS) -->
+        <div class="card modern-card mb-4">
+            <div class="card-body p-4">
+                <h5 class="card-title">Hindi Assistant (हिन्दी सहायक)</h5>
+                <div class="input-group mb-2">
+                    <input type="text" id="hindiInput" class="form-control" placeholder="अपना प्रश्न हिन्दी में लिखें...">
+                    <button id="hindiSendBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i> पूछें</button>
+                </div>
+                <div id="hindiTextResp" class="small text-muted mb-2"></div>
+                <div class="d-flex gap-2">
+                    <button id="hindiSpeakBtn" class="btn btn-outline-secondary btn-sm" disabled>
+                        <i class="fas fa-volume-up"></i> सुनें
+                    </button>
+                    <audio id="hindiAudio" controls style="display:none"></audio>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Commands -->
+        <div class="card modern-card">
+            <div class="card-body p-4">
+                <h5 class="card-title">Recent Commands</h5>
+                <div id="recentCommands" class="list-group list-group-flush">
+                    <div class="text-muted text-center">No recent commands</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Quick Commands -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Quick Commands</h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary btn-sm quick-command" data-command="How to deal with blackroot fungus in onions?">
+                        <i class="fas fa-bug me-1"></i>Disease Control
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm quick-command" data-command="What's the best time to plant wheat?">
+                        <i class="fas fa-seedling me-1"></i>Planting Guide
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm quick-command" data-command="How to improve soil fertility naturally?">
+                        <i class="fas fa-leaf me-1"></i>Soil Health
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm quick-command" data-command="What are the symptoms of rice blast disease?">
+                        <i class="fas fa-microscope me-1"></i>Disease Symptoms
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm quick-command" data-command="How to control aphids in cotton?">
+                        <i class="fas fa-spray-can me-1"></i>Pest Control
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm quick-command" data-command="Best practices for organic farming">
+                        <i class="fas fa-recycle me-1"></i>Organic Farming
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Settings -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Voice Settings</h5>
+                <div class="mb-3">
+                    <label for="voiceSpeed" class="form-label">Voice Speed</label>
+                    <input type="range" class="form-range" id="voiceSpeed" min="0.5" max="2" step="0.1" value="1">
+                    <small class="text-muted">Speed: <span id="speedValue">1.0</span>x</small>
+                </div>
+                <div class="mb-3">
+                    <label for="voiceVolume" class="form-label">Volume</label>
+                    <input type="range" class="form-range" id="voiceVolume" min="0" max="1" step="0.1" value="0.8">
+                    <small class="text-muted">Volume: <span id="volumeValue">80</span>%</small>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="autoSpeak" checked>
+                    <label class="form-check-label" for="autoSpeak">
+                        Auto-speak responses
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help & Tips -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Help & Tips</h5>
+                                 <ul class="list-unstyled small">
+                     <li class="mb-2">
+                         <i class="fas fa-microphone text-success me-1"></i>
+                         Click microphone and speak clearly
+                     </li>
+                     <li class="mb-2">
+                         <i class="fas fa-info-circle text-info me-1"></i>
+                         Use specific crop names for better results
+                     </li>
+                     <li class="mb-2">
+                         <i class="fas fa-info-circle text-info me-1"></i>
+                         Ask about weather, crops, soil, or schemes
+                     </li>
+                     <li class="mb-2">
+                         <i class="fas fa-info-circle text-info me-1"></i>
+                         Click quick commands for instant access
+                     </li>
+                     <li class="mb-2">
+                         <i class="fas fa-keyboard text-warning me-1"></i>
+                         Or type commands in the text box
+                     </li>
+                     <li class="mb-2">
+                         <i class="fas fa-wifi text-info me-1"></i>
+                         Requires internet connection for voice recognition
+                     </li>
+                     <li class="mb-2">
+                         <i class="fas fa-shield-alt text-info me-1"></i>
+                         Allow microphone access when prompted
+                     </li>
+                 </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+let micReady = false;
+let recognition = null; // Store the recognition object globally
+
+// DOM elements
+const recordButton = document.getElementById('recordButton');
+const recordingStatus = document.getElementById('recordingStatus');
+const processingStatus = document.getElementById('processingStatus');
+const responseArea = document.getElementById('responseArea');
+const recentCommands = document.getElementById('recentCommands');
+const commandInput = document.getElementById('commandInput');
+const sendCommandBtn = document.getElementById('sendCommandBtn');
+const browserSupportAlert = document.getElementById('browserSupportAlert');
+const recognitionLang = document.getElementById('recognitionLang');
+const micPermissionBtn = document.getElementById('micPermissionBtn');
+
+// Voice settings
+const voiceSpeed = document.getElementById('voiceSpeed');
+const voiceVolume = document.getElementById('voiceVolume');
+const autoSpeak = document.getElementById('autoSpeak');
+const speedValue = document.getElementById('speedValue');
+const volumeValue = document.getElementById('volumeValue');
+
+// Update settings display
+voiceSpeed.addEventListener('input', function() {
+    speedValue.textContent = this.value;
+});
+
+voiceVolume.addEventListener('input', function() {
+    volumeValue.textContent = Math.round(this.value * 100);
+});
+
+// Quick command buttons
+document.querySelectorAll('.quick-command').forEach(button => {
+    button.addEventListener('click', function() {
+        const command = this.getAttribute('data-command');
+        processCommand(command);
+    });
+});
+
+// Text command functionality
+sendCommandBtn.addEventListener('click', sendTextCommand);
+commandInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendTextCommand();
+    }
+});
+
+// Request mic permission proactively
+micPermissionBtn.addEventListener('click', requestMicPermission);
+async function requestMicPermission() {
+    try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            showResponse('Error: Mic API not available in this browser.', 'error');
+            return;
+        }
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(t => t.stop());
+        micReady = true;
+        micPermissionBtn.classList.remove('btn-outline-secondary');
+        micPermissionBtn.classList.add('btn-outline-success');
+        micPermissionBtn.innerHTML = '<i class="fas fa-check"></i> Mic Ready';
+    } catch (e) {
+        showResponse('Microphone permission denied. Please allow mic access in browser settings.', 'error');
+    }
+}
+
+// Hindi UI elements
+const hindiInput = document.getElementById('hindiInput');
+const hindiSendBtn = document.getElementById('hindiSendBtn');
+const hindiSpeakBtn = document.getElementById('hindiSpeakBtn');
+const hindiTextResp = document.getElementById('hindiTextResp');
+const hindiAudio = document.getElementById('hindiAudio');
+
+hindiSendBtn.addEventListener('click', async function() {
+    const text = (hindiInput.value || '').trim();
+    if (!text) return;
+    hindiTextResp.textContent = 'सोच रहा हूँ...';
+    hindiSpeakBtn.disabled = true;
+    try {
+        const r = await fetch('/voice/hindi/chat/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ message: text })
+        });
+        const data = await r.json();
+        if (data.error) { hindiTextResp.textContent = 'त्रुटि: ' + data.error; return; }
+        hindiTextResp.textContent = data.response;
+        hindiSpeakBtn.disabled = false;
+    } catch(e) {
+        hindiTextResp.textContent = 'नेटवर्क त्रुटि';
+    }
+});
+
+hindiSpeakBtn.addEventListener('click', async function() {
+    const text = hindiTextResp.textContent.trim();
+    if (!text) return;
+    hindiSpeakBtn.disabled = true;
+    try {
+        const r = await fetch('/voice/hindi/tts/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ text })
+        });
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        hindiAudio.src = url;
+        hindiAudio.style.display = 'block';
+        hindiAudio.play();
+    } catch(e) {}
+    hindiSpeakBtn.disabled = false;
+});
+
+// Record and stop button functionality
+const stopButton = document.getElementById('stopButton');
+
+recordButton.addEventListener('click', async function() {
+    if (!isRecording) {
+        await startRecording();
+    }
+});
+stopButton.addEventListener('click', stopRecording);
+
+async function toggleRecording() {
+    if (!isRecording) {
+        await startRecording();
+    } else {
+        stopRecording();
+    }
+}
+
+function resolveRecognitionLang() {
+    const sel = recognitionLang.value;
+    if (sel && sel !== 'auto') return sel;
+    // Fallback to browser locale, default to en-IN if not present
+    return navigator.language || 'en-IN';
+}
+
+async function startRecording() {
+    try {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            showResponse('Error: Speech recognition is not supported in this browser. Please use text input instead.', 'error');
+            return;
+        }
+        // Ensure mic permission first to avoid silent failures
+        if (!micReady) {
+            await requestMicPermission();
+        }
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = resolveRecognitionLang();
+        recognition.onstart = () => {
+            isRecording = true;
+            recordButton.style.display = 'none';
+            stopButton.style.display = 'block';
+            recordingStatus.style.display = 'block';
+            recordingStatus.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Listening... Speak now!';
+        };
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            commandInput.value = transcript;
+            stopRecording();
+            processTextCommand(transcript);
+        };
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            stopRecording();
+            let errorMessage = '';
+            switch(event.error) {
+                case 'no-speech': errorMessage = 'No speech detected. Please try again.'; break;
+                case 'audio-capture': errorMessage = 'Mic not available. Click Enable Mic and allow permission.'; break;
+                case 'network': errorMessage = 'Network error. Check internet or try again later.'; break;
+                case 'not-allowed': errorMessage = 'Mic access denied. Allow microphone in browser settings.'; break;
+                case 'service-not-allowed': errorMessage = 'Recognition service blocked. Try Chrome/Edge desktop.'; break;
+                default: errorMessage = 'Speech recognition error: ' + event.error;
+            }
+            showResponse(errorMessage, 'error');
+        };
+        recognition.onend = () => { 
+            // Only call stopRecording if we're still recording
+            // This prevents double calls when stopRecording manually aborts recognition
+            if (isRecording) {
+                stopRecording(); 
+            }
+        };
+        recognition.start();
+    } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        showResponse('Error: Could not start speech recognition. Please click Enable Mic and try again.', 'error');
+    }
+}
+
+function stopRecording() {
+    if (isRecording) {
+        isRecording = false;
+        recordButton.style.display = 'block';
+        stopButton.style.display = 'none';
+        recordingStatus.style.display = 'none';
+        
+        // Stop the speech recognition if it's active
+        if (recognition) {
+            try {
+                recognition.abort(); // Abort the recognition process
+            } catch (error) {
+                console.error('Error stopping speech recognition:', error);
+            }
+        }
+    }
+}
+
+function sendTextCommand() {
+    const command = commandInput.value.trim();
+    if (command) {
+        processTextCommand(command);
+        commandInput.value = '';
+    }
+}
+
+async function processTextCommand(command) {
+    processingStatus.style.display = 'block';
+    addToRecentCommands(command);
+    try {
+        const response = await fetch('{% url "voice_process" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ command })
+        });
+        const result = await response.json();
+        processingStatus.style.display = 'none';
+        if (result.error) {
+            showResponse('Error: ' + result.error, 'error');
+        } else {
+            showResponse(result.response, 'success', result.ai_generated);
+            if (result.action) { executeAction(result.action); }
+            if (autoSpeak.checked) { speakText(result.response); }
+        }
+    } catch (error) {
+        console.error('Error processing text command:', error);
+        processingStatus.style.display = 'none';
+        showResponse('Error: Could not process command. Please try again.', 'error');
+    }
+}
+
+function processCommand(command) {
+    processTextCommand(command);
+}
+
+function showResponse(text, type = 'info', aiGenerated = false) {
+    let alertClass = type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info';
+    let icon = type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle';
+    let aiBadge = '';
+    if (aiGenerated) { alertClass = 'alert-success'; icon = 'robot'; aiBadge = '<span class="badge bg-primary ms-2"><i class="fas fa-ai me-1"></i>AI Generated</span>'; }
+    responseArea.innerHTML = `
+        <div class="alert ${alertClass} mb-0">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-${icon} me-2 mt-1"></i>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        <strong>AgriGenie Assistant</strong>
+                        ${aiBadge}
+                    </div>
+                    <div class="response-text">${text}</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function addToRecentCommands(command) {
+    const commands = JSON.parse(localStorage.getItem('recentCommands') || '[]');
+    if (!commands.includes(command)) {
+        commands.unshift(command);
+        commands.splice(5);
+        localStorage.setItem('recentCommands', JSON.stringify(commands));
+    }
+    updateRecentCommandsDisplay();
+}
+
+function updateRecentCommandsDisplay() {
+    const commands = JSON.parse(localStorage.getItem('recentCommands') || '[]');
+    if (commands.length === 0) {
+        recentCommands.innerHTML = '<div class="text-muted text-center">No recent commands</div>';
+    } else {
+        recentCommands.innerHTML = commands.map(cmd => 
+            `<div class="list-group-item list-group-item-action small" onclick="processCommand('${cmd}')">
+                <i class="fas fa-history me-2"></i>${cmd}
+            </div>`
+        ).join('');
+    }
+}
+
+function executeAction(action) {
+    if (action.startsWith('navigate:')) {
+        const page = action.split(':')[1];
+        window.location.href = '/' + page;
+    }
+}
+
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = parseFloat(voiceSpeed.value);
+        utterance.volume = parseFloat(voiceVolume.value);
+        speechSynthesis.speak(utterance);
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Check browser support
+function checkBrowserSupport() {
+    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    const isEdge = /Edg/.test(navigator.userAgent);
+    const isFirefox = /Firefox/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    if (!isChrome && !isEdge && !isFirefox) {
+        browserSupportAlert.style.display = 'block';
+        browserSupportAlert.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Browser Support:</strong> Speech recognition works best in Chrome, Edge, or Firefox. 
+            You may experience issues in other browsers. Please use the text input if voice doesn't work.
+        `;
+    } else if (isSafari) {
+        browserSupportAlert.style.display = 'block';
+        browserSupportAlert.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Safari Notice:</strong> Speech recognition has limited support in Safari. 
+            Please use Chrome, Edge, or the text input for better experience.
+        `;
+    }
+}
+
+// Initialize
+updateRecentCommandsDisplay();
+checkBrowserSupport();
+</script>
+
+<style>
+.assistant-hero {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    color: #fff;
+    padding: 1.25rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.hero-title { margin: 0; font-weight: 700; }
+.hero-subtitle { margin: 0; opacity: 0.9; }
+.bg-success-soft { background: rgba(40, 167, 69, 0.15); color: #eaffea; border: 1px solid rgba(40,167,69,0.25); }
+.bg-primary-soft { background: rgba(0, 123, 255, 0.15); color: #e6f0ff; border: 1px solid rgba(0,123,255,0.25); }
+.bg-warning-soft { background: rgba(255, 193, 7, 0.15); color: #fff7e6; border: 1px solid rgba(255,193,7,0.25); }
+
+.modern-card { border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border-radius: 1rem; }
+.response-area { min-height: 150px; border: 2px dashed #e9ecef; border-radius: 0.75rem; padding: 1rem; background: #fafafa; }
+.min-h-100 { min-height: 100px; }
+.btn-lg.rounded-circle { transition: all 0.3s ease; width: 90px; height: 90px; }
+.btn-lg.rounded-circle:hover { transform: scale(1.06); }
+.mic-btn { background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%); color: #fff; border: none; }
+.mic-btn:hover { box-shadow: 0 10px 25px rgba(45,90,39,0.35); }
+.stop-btn { background: linear-gradient(135deg, #dc3545 0%, #b52a38 100%); color: #fff; border: none; width: 90px; height: 90px; }
+.list-group-item-action { cursor: pointer; }
+.list-group-item-action:hover { background-color: #f8f9fa; }
+</style>
+{% endblock %}

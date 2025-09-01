@@ -1,0 +1,28 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="mb-3">Your Profile</h4>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+                    {% for field in form %}
+                        <div class="col-md-6">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Save changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

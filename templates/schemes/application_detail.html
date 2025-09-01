@@ -1,0 +1,326 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Application Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 text-success dashboard-title">
+            <i class="fas fa-file-alt me-2"></i>Application Details
+        </h1>
+        <p class="lead text-muted">{{ application.scheme.name }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'my_applications' %}" class="btn btn-outline-secondary back-btn">
+                <i class="fas fa-arrow-left me-1"></i>Back to Applications
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Application Information -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-info-circle me-2"></i>Application Information
+                </h5>
+                
+                <div class="application-info">
+                    <div class="info-item">
+                        <strong class="text-success">Status:</strong>
+                        <span class="badge bg-{{ application.status }}">{{ application.get_status_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-success">Application Date:</strong>
+                        <span>{{ application.application_date|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-success">Last Updated:</strong>
+                        <span>{{ application.last_updated|date:"F d, Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-user me-2"></i>Personal Information
+                </h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong class="text-success">Full Name:</strong>
+                            <span>{{ application.full_name }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong class="text-success">Phone Number:</strong>
+                            <span>{{ application.phone_number|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong class="text-success">Email:</strong>
+                            <span>{{ application.email }}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="info-item">
+                            <strong class="text-success">Address:</strong>
+                            <span>{{ application.address|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Farm Information -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-tractor me-2"></i>Farm Information
+                </h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong class="text-success">Farm Size:</strong>
+                            <span>{{ application.farm_size|default:"Not provided" }} {% if application.farm_size %}hectares{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong class="text-success">Crop Type:</strong>
+                            <span>{{ application.crop_type|default:"Not provided" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <strong class="text-success">Annual Income:</strong>
+                            <span>{{ application.annual_income|default:"Not provided" }} {% if application.annual_income %}INR{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Notes -->
+        {% if application.notes %}
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-sticky-note me-2"></i>Additional Notes
+                </h5>
+                <p class="card-text">{{ application.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Scheme Information -->
+        <div class="card sidebar-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-university me-2"></i>Scheme Information
+                </h5>
+                
+                <div class="scheme-info">
+                    <div class="info-item">
+                        <strong class="text-success">Scheme:</strong>
+                        <span>{{ application.scheme.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-success">Category:</strong>
+                        <span>{{ application.scheme.get_category_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-success">Status:</strong>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="text-success">Benefits</h6>
+                <p class="text-muted small">{{ application.scheme.benefits|truncatewords:15 }}</p>
+                
+                <h6 class="text-success">Eligibility</h6>
+                <p class="text-muted small">{{ application.scheme.eligibility|truncatewords:10 }}</p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card sidebar-card">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-cogs me-2"></i>Actions
+                </h5>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'scheme_detail' application.scheme.id %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>View Scheme Details
+                    </a>
+                    
+                    {% if application.status in 'pending,submitted' %}
+                    <button class="btn btn-danger btn-sm" onclick="withdrawApplication({{ application.id }})">
+                        <i class="fas fa-times me-1"></i>Withdraw Application
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'my_applications' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-list me-1"></i>Back to Applications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhanced Application Detail Styles */
+.dashboard-title {
+    animation: slideInLeft 0.8s ease-out;
+    transform: translateZ(25px);
+    text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.back-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 
+        0 4px 0 rgba(0,0,0,0.2),
+        0 6px 15px rgba(0,0,0,0.2);
+}
+
+.back-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    background-color: #4caf50;
+    border-color: #4caf50;
+    color: white;
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.4),
+        0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.detail-card, .sidebar-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-card::before, .sidebar-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(76, 199, 116, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.detail-card:hover::before, .sidebar-card:hover::before {
+    left: 100%;
+}
+
+.detail-card:hover, .sidebar-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.application-info, .scheme-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(76, 199, 116, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: rgba(76, 199, 116, 0.15);
+    transform: translateX(5px);
+}
+
+/* Status color classes */
+.bg-pending { background-color: #ffc107 !important; }
+.bg-submitted { background-color: #17a2b8 !important; }
+.bg-under_review { background-color: #fd7e14 !important; }
+.bg-approved { background-color: #28a745 !important; }
+.bg-rejected { background-color: #dc3545 !important; }
+.bg-completed { background-color: #6f42c1 !important; }
+
+/* Additional status colors for different naming */
+.bg-info { background-color: #17a2b8 !important; }
+.bg-warning { background-color: #ffc107 !important; }
+.bg-success { background-color: #28a745 !important; }
+.bg-danger { background-color: #dc3545 !important; }
+.bg-primary { background-color: #6f42c1 !important; }
+
+/* Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive hover effects */
+@media (max-width: 768px) {
+    .detail-card:hover, .sidebar-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+}
+</style>
+
+<script>
+function withdrawApplication(applicationId) {
+    if (confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
+        window.location.href = `/schemes/withdraw/${applicationId}/`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced card animations
+    document.querySelectorAll('.detail-card, .sidebar-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %}

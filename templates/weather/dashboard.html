@@ -1,0 +1,727 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Weather Dashboard - AgriGenie{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="weather-header text-center mb-4">
+                <h1 class="display-4 text-white mb-3">
+                    <i class="fas fa-cloud-sun me-3"></i>Live Weather Dashboard
+                </h1>
+                <p class="lead text-white-50">Real-time weather data for your current location</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Permission Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark-green text-white">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="locationModalLabel">
+                        <i class="fas fa-map-marker-alt me-2"></i>Enable Location Access
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>To provide you with accurate weather data, we need access to your current location.</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your location will be used only for weather data and will not be stored permanently.
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="enableLocation()">
+                        <i class="fas fa-check me-2"></i>Enable Location
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Weather Display -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="weather-card bg-white rounded-4 shadow-lg p-4 mb-4">
+                <div class="text-center mb-4">
+                    <button id="getLocationBtn" class="btn btn-success btn-lg px-4 py-3" onclick="getCurrentLocationWeather()">
+                        <i class="fas fa-location-arrow me-2"></i>Get My Location Weather
+                    </button>
+                    <div class="mt-3">
+                        <button id="manualLocationBtn" class="btn btn-outline-success me-2" onclick="showManualLocationInput()">
+                            <i class="fas fa-map-marker-alt me-2"></i>Manual Location
+                        </button>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Using OpenMeteo API for accurate weather data
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Location Input -->
+                <div id="manualLocationInput" class="text-center mb-4" style="display: none;">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card bg-light-green border-success">
+                                <div class="card-body">
+                                    <h6 class="text-dark-green mb-3">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Enter Location Coordinates
+                                    </h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <input type="number" id="manualLat" class="form-control" placeholder="Latitude" step="any">
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="number" id="manualLon" class="form-control" placeholder="Longitude" step="any">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <button class="btn btn-success btn-sm" onclick="getManualLocationWeather()">
+                                            <i class="fas fa-search me-2"></i>Get Weather
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="hideManualLocationInput()">
+                                            <i class="fas fa-times me-2"></i>Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Display Area -->
+                <div id="weatherDisplay" class="text-center" style="display: none;">
+                    <div class="location-info mb-4">
+                        <h3 id="locationName" class="text-dark-green mb-2">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                        </h3>
+                        <p id="locationDetails" class="text-muted"></p>
+                    </div>
+
+                    <div class="weather-main mb-4">
+                        <div class="temperature-display">
+                            <span id="temperature" class="display-1 text-dark-green fw-bold"></span>
+                            <span class="fs-2 text-muted">°C</span>
+                        </div>
+                        <div class="weather-description">
+                            <h4 id="weatherDescription" class="text-dark-green mb-2"></h4>
+                            <p id="feelsLike" class="text-muted">Feels like <span id="feelsLikeTemp"></span>°C</p>
+                        </div>
+                    </div>
+
+                    <!-- Weather Details Grid -->
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="weather-detail-card bg-light-green rounded-3 p-3 text-center">
+                                <i class="fas fa-tint fa-2x text-success mb-2"></i>
+                                <h6 class="text-dark-green mb-1">Humidity</h6>
+                                <p id="humidity" class="mb-0 fw-bold text-dark-green"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="weather-detail-card bg-light-green rounded-3 p-3 text-center">
+                                <i class="fas fa-wind fa-2x text-success mb-2"></i>
+                                <h6 class="text-dark-green mb-1">Wind Speed</h6>
+                                <p id="windSpeed" class="mb-0 fw-bold text-dark-green"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="weather-detail-card bg-light-green rounded-3 p-3 text-center">
+                                <i class="fas fa-compress-alt fa-2x text-success mb-2"></i>
+                                <h6 class="text-dark-green mb-1">Pressure</h6>
+                                <p id="pressure" class="mb-0 fw-bold text-dark-green"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-3">
+                            <div class="weather-detail-card bg-light-green rounded-3 p-3 text-center">
+                                <i class="fas fa-eye fa-2x text-success mb-2"></i>
+                                <h6 class="text-dark-green mb-1">Visibility</h6>
+                                <p id="visibility" class="mb-0 fw-bold text-dark-green"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Coordinates Info -->
+                    <div class="mt-4 p-3 bg-light rounded-3">
+                        <small class="text-muted">
+                            <i class="fas fa-crosshairs me-1"></i>
+                            Coordinates: <span id="coordinates"></span>
+                        </small>
+                    </div>
+
+                    <!-- Forecast Button -->
+                    <div class="mt-3">
+                        <button id="getForecastBtn" class="btn btn-outline-success" onclick="getForecast()" style="display: none;">
+                            <i class="fas fa-calendar-alt me-2"></i>Get 5-Day Forecast
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Forecast Display -->
+                <div id="forecastDisplay" class="mt-4" style="display: none;">
+                    <h5 class="text-dark-green mb-3">
+                        <i class="fas fa-calendar-alt me-2"></i>5-Day Weather Forecast
+                    </h5>
+                    <div id="forecastData" class="row g-3">
+                        <!-- Forecast data will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="text-center" style="display: none;">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Fetching weather data...</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorState" class="text-center" style="display: none;">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+                    <button class="btn btn-outline-success" onclick="getCurrentLocationWeather()">
+                        <i class="fas fa-redo me-2"></i>Try Again
+                    </button>
+                </div>
+            </div>
+    </div>
+</div>
+
+    <!-- Weather History -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="weather-card bg-white rounded-4 shadow-lg p-4">
+                <h4 class="text-dark-green mb-3">
+                    <i class="fas fa-history me-2"></i>Recent Weather Checks
+                </h4>
+                <div id="weatherHistory" class="table-responsive">
+                    <!-- Weather history will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.weather-header {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    padding: 2rem 0;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+.weather-card {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.weather-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.temperature-display {
+    font-size: 4rem;
+    font-weight: 300;
+    line-height: 1;
+}
+
+.weather-detail-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.weather-detail-card:hover {
+    transform: translateY(-3px);
+    border-color: #48c774;
+    box-shadow: 0 8px 25px rgba(72, 199, 116, 0.2);
+}
+
+.forecast-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.forecast-card:hover {
+    transform: translateY(-3px);
+    border-color: #48c774;
+    box-shadow: 0 8px 25px rgba(72, 199, 116, 0.2);
+}
+
+.temperature-range {
+    font-size: 1.1rem;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #1e3d1a 0%, #3a6b4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(72, 199, 116, 0.3);
+}
+
+.modal-content {
+    border: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.alert-info {
+    background-color: rgba(72, 199, 116, 0.1);
+    border-color: #48c774;
+    color: #2d5a27;
+}
+
+@media (max-width: 768px) {
+    .temperature-display {
+        font-size: 3rem;
+    }
+    
+    .weather-header h1 {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<script>
+let locationPermissionGranted = false;
+
+// Check if geolocation is supported
+function checkLocationSupport() {
+    if (!navigator.geolocation) {
+        showError('Geolocation is not supported by your browser. Please enable location services.');
+        return false;
+    }
+    return true;
+}
+
+// Request location permission
+function requestLocationPermission() {
+    if (!checkLocationSupport()) return;
+    
+    const modal = new bootstrap.Modal(document.getElementById('locationModal'));
+    modal.show();
+}
+
+// Enable location access
+function enableLocation() {
+    if (!checkLocationSupport()) return;
+    
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            locationPermissionGranted = true;
+            const modal = bootstrap.Modal.getInstance(document.getElementById('locationModal'));
+            modal.hide();
+            
+            // Get weather data using coordinates
+            getWeatherByCoordinates(position.coords.latitude, position.coords.longitude);
+        },
+        function(error) {
+            let errorMessage = 'Unable to get your location. ';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage += 'Please allow location access in your browser settings.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage += 'Location information is unavailable.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage += 'Location request timed out.';
+                    break;
+                default:
+                    errorMessage += 'An unknown error occurred.';
+                    break;
+            }
+            showError(errorMessage);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
+        }
+    );
+}
+
+// Get current location weather
+function getCurrentLocationWeather() {
+    if (!checkLocationSupport()) return;
+    
+    showLoading();
+    
+    if (locationPermissionGranted) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                getWeatherByCoordinates(position.coords.latitude, position.coords.longitude);
+            },
+            function(error) {
+                showError('Unable to get your current location. Please try again.');
+            }
+        );
+    } else {
+        requestLocationPermission();
+    }
+}
+
+// Get weather by coordinates
+function getWeatherByCoordinates(lat, lon) {
+    fetch('/weather/get-current-location/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            latitude: lat,
+            longitude: lon
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            showError(data.error);
+        } else {
+            displayWeatherData(data);
+            loadWeatherHistory();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError(`Failed to fetch weather data: ${error.message}. Please check your connection and try again.`);
+    });
+}
+
+// Display weather data
+function displayWeatherData(data) {
+    hideLoading();
+    hideError();
+    
+    // Update location info
+    document.getElementById('locationName').textContent = data.location;
+    document.getElementById('locationDetails').textContent = `Current weather conditions`;
+    document.getElementById('coordinates').textContent = `${data.lat.toFixed(4)}, ${data.lon.toFixed(4)}`;
+    
+    // Update main weather info
+    document.getElementById('temperature').textContent = Math.round(data.temperature);
+    document.getElementById('weatherDescription').textContent = data.description;
+    document.getElementById('feelsLikeTemp').textContent = Math.round(data.feels_like);
+    
+    // Update weather details
+    document.getElementById('humidity').textContent = `${data.humidity}%`;
+    document.getElementById('windSpeed').textContent = `${data.wind_speed} km/h`;
+    document.getElementById('pressure').textContent = `${data.pressure} hPa`;
+    document.getElementById('visibility').textContent = data.visibility ? `${(data.visibility / 1000).toFixed(1)} km` : 'N/A';
+    
+    // Show weather display
+    document.getElementById('weatherDisplay').style.display = 'block';
+    
+    // Show forecast button
+    document.getElementById('getForecastBtn').style.display = 'inline-block';
+    
+    // Store coordinates for forecast
+    window.currentLat = data.lat;
+    window.currentLon = data.lon;
+    
+    // Add success notification
+    showNotification('Weather data updated successfully!', 'success');
+}
+
+// Load weather history
+function loadWeatherHistory() {
+    fetch('/weather/get-history/', {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const historyContainer = document.getElementById('weatherHistory');
+        
+        if (data.error) {
+            historyContainer.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        } else if (data.history && data.history.length > 0) {
+            let historyHTML = `
+                <table class="table table-hover">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Location</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Description</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.history.forEach(record => {
+                historyHTML += `
+                    <tr>
+                        <td><i class="fas fa-map-marker-alt me-1"></i>${record.location}</td>
+                        <td><strong>${Math.round(record.temperature)}°C</strong></td>
+                        <td>${record.humidity}%</td>
+                        <td>${record.description}</td>
+                        <td><small class="text-muted">${record.timestamp}</small></td>
+                    </tr>
+                `;
+            });
+            
+            historyHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            historyContainer.innerHTML = historyHTML;
+        } else {
+            historyContainer.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-clock fa-2x mb-3"></i>
+                    <p>No weather history available yet</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading weather history:', error);
+        const historyContainer = document.getElementById('weatherHistory');
+        historyContainer.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <p>Failed to load weather history: ${error.message}</p>
+            </div>
+        `;
+    });
+}
+
+// Get forecast data
+function getForecast() {
+    if (!window.currentLat || !window.currentLon) {
+        showNotification('Please get current weather first', 'error');
+        return;
+    }
+    
+    const forecastBtn = document.getElementById('getForecastBtn');
+    const originalText = forecastBtn.innerHTML;
+    forecastBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading Forecast...';
+    forecastBtn.disabled = true;
+    
+    fetch('/weather/get-forecast/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            latitude: window.currentLat,
+            longitude: window.currentLon
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            showNotification(data.error, 'error');
+        } else {
+            displayForecastData(data.forecast);
+            showNotification('Forecast loaded successfully!', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification(`Failed to load forecast data: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        forecastBtn.innerHTML = originalText;
+        forecastBtn.disabled = false;
+    });
+}
+
+// Display forecast data
+function displayForecastData(forecast) {
+    const forecastContainer = document.getElementById('forecastData');
+    const forecastDisplay = document.getElementById('forecastDisplay');
+    
+    let forecastHTML = '';
+    
+    forecast.forEach(day => {
+        const date = new Date(day.date);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        forecastHTML += `
+            <div class="col-md-6 col-lg-2">
+                <div class="forecast-card bg-light-green rounded-3 p-3 text-center">
+                    <h6 class="text-dark-green mb-2">${dayName}</h6>
+                    <p class="text-muted small mb-2">${monthDay}</p>
+                    <div class="temperature-range mb-2">
+                        <span class="text-danger fw-bold">${Math.round(day.max_temp)}°</span>
+                        <span class="text-muted"> / </span>
+                        <span class="text-primary fw-bold">${Math.round(day.min_temp)}°</span>
+                    </div>
+                    <p class="text-dark-green small mb-1">${day.description}</p>
+                    <p class="text-muted small mb-0">Humidity: ${day.humidity}%</p>
+                    <p class="text-muted small mb-0">Rain: ${day.precipitation_probability}%</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    forecastContainer.innerHTML = forecastHTML;
+    forecastDisplay.style.display = 'block';
+}
+
+// Show loading state
+function showLoading() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('weatherDisplay').style.display = 'none';
+    document.getElementById('errorState').style.display = 'none';
+}
+
+// Hide loading state
+function hideLoading() {
+    document.getElementById('loadingState').style.display = 'none';
+}
+
+// Show error state
+function showError(message) {
+    hideLoading();
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('weatherDisplay').style.display = 'none';
+}
+
+// Hide error state
+function hideError() {
+    document.getElementById('errorState').style.display = 'none';
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                      type === 'error' ? 'alert-danger' : 
+                      type === 'warning' ? 'alert-warning' : 'alert-info';
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Show manual location input
+function showManualLocationInput() {
+    document.getElementById('manualLocationInput').style.display = 'block';
+    document.getElementById('getLocationBtn').style.display = 'none';
+    document.getElementById('manualLocationBtn').style.display = 'none';
+}
+
+// Hide manual location input
+function hideManualLocationInput() {
+    document.getElementById('manualLocationInput').style.display = 'none';
+    document.getElementById('getLocationBtn').style.display = 'inline-block';
+    document.getElementById('manualLocationBtn').style.display = 'inline-block';
+}
+
+// Get weather for manual location
+function getManualLocationWeather() {
+    const lat = parseFloat(document.getElementById('manualLat').value);
+    const lon = parseFloat(document.getElementById('manualLon').value);
+    
+    if (isNaN(lat) || isNaN(lon)) {
+        showNotification('Please enter valid latitude and longitude coordinates', 'error');
+        return;
+    }
+    
+    if (lat < -90 || lat > 90) {
+        showNotification('Latitude must be between -90 and 90', 'error');
+        return;
+    }
+    
+    if (lon < -180 || lon > 180) {
+        showNotification('Longitude must be between -180 and 180', 'error');
+        return;
+    }
+    
+    hideManualLocationInput();
+    showLoading();
+    getWeatherByCoordinates(lat, lon);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-get weather on page load if permission is already granted
+    if (navigator.geolocation) {
+        navigator.permissions.query({name: 'geolocation'}).then(function(result) {
+            if (result.state === 'granted') {
+                locationPermissionGranted = true;
+                getCurrentLocationWeather();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

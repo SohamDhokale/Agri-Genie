@@ -1,0 +1,480 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Crop Recommendation - AgriGenie{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="crop-header text-center mb-4">
+                <h1 class="display-4 text-white mb-3">
+                    <i class="fas fa-seedling me-3"></i>Crop Recommendation
+                </h1>
+                <p class="lead text-white-50">Get personalized crop recommendations based on your soil and climate data</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="crop-form-card bg-white rounded-4 shadow-lg p-4">
+                <form method="post" novalidate class="needs-validation">
+                    {% csrf_token %}
+                    
+                    <!-- Soil Parameters -->
+                    <div class="form-section mb-4">
+                        <h4 class="text-dark-green mb-3">
+                            <i class="fas fa-flask me-2"></i>Soil Parameters
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.nitrogen.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-atom me-1"></i>{{ form.nitrogen.label }}
+                                </label>
+                                {{ form.nitrogen }}
+                                {% if form.nitrogen.help_text %}
+                                    <div class="form-text">{{ form.nitrogen.help_text }}</div>
+                                {% endif %}
+                                {% if form.nitrogen.errors %}
+                                    <div class="text-danger small">{{ form.nitrogen.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.phosphorus.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-atom me-1"></i>{{ form.phosphorus.label }}
+                                </label>
+                                {{ form.phosphorus }}
+                                {% if form.phosphorus.help_text %}
+                                    <div class="form-text">{{ form.phosphorus.help_text }}</div>
+                                {% endif %}
+                                {% if form.phosphorus.errors %}
+                                    <div class="text-danger small">{{ form.phosphorus.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.potassium.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-atom me-1"></i>{{ form.potassium.label }}
+                                </label>
+                                {{ form.potassium }}
+                                {% if form.potassium.help_text %}
+                                    <div class="form-text">{{ form.potassium.help_text }}</div>
+                                {% endif %}
+                                {% if form.potassium.errors %}
+                                    <div class="text-danger small">{{ form.potassium.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.ph.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-tint me-1"></i>{{ form.ph.label }}
+                                </label>
+                                {{ form.ph }}
+                                {% if form.ph.help_text %}
+                                    <div class="form-text">{{ form.ph.help_text }}</div>
+                                {% endif %}
+                                {% if form.ph.errors %}
+                                    <div class="text-danger small">{{ form.ph.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Climate Parameters -->
+                    <div class="form-section mb-4">
+                        <h4 class="text-dark-green mb-3">
+                            <i class="fas fa-cloud-sun me-2"></i>Climate Parameters
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.temperature.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-thermometer-half me-1"></i>{{ form.temperature.label }}
+                                </label>
+                                {{ form.temperature }}
+                                {% if form.temperature.help_text %}
+                                    <div class="form-text">{{ form.temperature.help_text }}</div>
+                                {% endif %}
+                                {% if form.temperature.errors %}
+                                    <div class="text-danger small">{{ form.temperature.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.humidity.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-tint me-1"></i>{{ form.humidity.label }}
+                                </label>
+                                {{ form.humidity }}
+                                {% if form.humidity.help_text %}
+                                    <div class="form-text">{{ form.humidity.help_text }}</div>
+                                {% endif %}
+                                {% if form.humidity.errors %}
+                                    <div class="text-danger small">{{ form.humidity.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.rainfall.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-cloud-rain me-1"></i>{{ form.rainfall.label }}
+                                </label>
+                                {{ form.rainfall }}
+                                {% if form.rainfall.help_text %}
+                                    <div class="form-text">{{ form.rainfall.help_text }}</div>
+                                {% endif %}
+                                {% if form.rainfall.errors %}
+                                    <div class="text-danger small">{{ form.rainfall.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.state.id_for_label }}" class="form-label text-dark-green fw-bold">
+                                    <i class="fas fa-map-marker-alt me-1"></i>{{ form.state.label }}
+                                </label>
+                                {{ form.state }}
+                                {% if form.state.help_text %}
+                                    <div class="form-text">{{ form.state.help_text }}</div>
+                                {% endif %}
+                                {% if form.state.errors %}
+                                    <div class="text-danger small">{{ form.state.errors|striptags }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Select your state for region-specific recommendations
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success btn-lg px-5 py-3">
+                            <i class="fas fa-magic me-2"></i>Get Crop Recommendations
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-8 col-md-10">
+            <div class="help-card bg-light-green rounded-4 p-4">
+                <h5 class="text-dark-green mb-3">
+                    <i class="fas fa-question-circle me-2"></i>How to use this form
+                </h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Enter your soil test results</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Provide current climate data</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Select your state/location</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Get personalized recommendations</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>View expected yields and profits</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Compare different crop options</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.crop-header {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    padding: 2rem 0;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+.crop-form-card {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.crop-form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.form-section {
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 1.5rem;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: #48c774;
+    box-shadow: 0 0 0 0.2rem rgba(72, 199, 116, 0.25);
+    background-color: #fff;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    border: none;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #1e3d1a 0%, #3a6b4a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(72, 199, 116, 0.3);
+}
+
+.help-card {
+    border: 2px solid #48c774;
+    transition: all 0.3s ease;
+}
+
+/* Enhanced dropdown styling */
+select.form-control {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem;
+}
+
+select.form-control:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2348c774' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    transform: translateY(-1px);
+}
+
+.alert-info {
+    background-color: rgba(72, 199, 116, 0.1);
+    border-color: #48c774;
+    color: #2d5a27;
+    font-size: 0.875rem;
+}
+
+.help-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(72, 199, 116, 0.2);
+}
+
+@media (max-width: 768px) {
+    .crop-header h1 {
+        font-size: 2rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+// Add Bootstrap validation classes to form fields
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.needs-validation');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    const stateSelect = document.getElementById('state-select');
+    
+    inputs.forEach(input => {
+        input.classList.add('form-control');
+    });
+    
+    // Form validation
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Add input validation feedback
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.checkValidity()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    });
+    
+    // Enhanced state dropdown functionality
+    if (stateSelect) {
+        // Add change event listener
+        stateSelect.addEventListener('change', function() {
+            const selectedState = this.value;
+            if (selectedState) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                
+                // Show state-specific info
+                showStateInfo(selectedState);
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+        
+        // Add search functionality to dropdown
+        stateSelect.addEventListener('keyup', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const options = this.querySelectorAll('option');
+            
+            options.forEach(option => {
+                const text = option.text.toLowerCase();
+                if (text.includes(searchTerm) || option.value === '') {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        });
+    }
+    
+    // Function to show state-specific information
+    function showStateInfo(state) {
+        const stateInfo = {
+            'Punjab': 'Major crops: Wheat, Rice, Cotton, Sugarcane',
+            'Haryana': 'Major crops: Wheat, Rice, Cotton, Mustard',
+            'Uttar Pradesh': 'Major crops: Wheat, Rice, Sugarcane, Potato',
+            'Maharashtra': 'Major crops: Sugarcane, Cotton, Soybean, Onion',
+            'Karnataka': 'Major crops: Coffee, Rice, Maize, Sugarcane',
+            'Andhra Pradesh': 'Major crops: Rice, Cotton, Groundnut, Sugarcane',
+            'Telangana': 'Major crops: Rice, Cotton, Maize, Sugarcane',
+            'Tamil Nadu': 'Major crops: Rice, Sugarcane, Coconut, Banana',
+            'Gujarat': 'Major crops: Cotton, Groundnut, Wheat, Sugarcane',
+            'Madhya Pradesh': 'Major crops: Soybean, Wheat, Cotton, Sugarcane',
+            'Rajasthan': 'Major crops: Wheat, Barley, Cotton, Mustard',
+            'Bihar': 'Major crops: Rice, Wheat, Maize, Sugarcane',
+            'West Bengal': 'Major crops: Rice, Jute, Potato, Tea',
+            'Kerala': 'Major crops: Coconut, Rubber, Tea, Spices',
+            'Assam': 'Major crops: Tea, Rice, Jute, Mustard',
+            'Odisha': 'Major crops: Rice, Pulses, Oilseeds, Sugarcane',
+            'Jharkhand': 'Major crops: Rice, Maize, Pulses, Oilseeds',
+            'Chhattisgarh': 'Major crops: Rice, Maize, Pulses, Oilseeds',
+            'Himachal Pradesh': 'Major crops: Apple, Wheat, Maize, Potato',
+            'Uttarakhand': 'Major crops: Wheat, Rice, Sugarcane, Fruits',
+            'Goa': 'Major crops: Rice, Coconut, Cashew, Spices',
+            'Manipur': 'Major crops: Rice, Maize, Pulses, Oilseeds',
+            'Meghalaya': 'Major crops: Rice, Maize, Potato, Fruits',
+            'Mizoram': 'Major crops: Rice, Maize, Pulses, Oilseeds',
+            'Nagaland': 'Major crops: Rice, Maize, Pulses, Oilseeds',
+            'Tripura': 'Major crops: Rice, Jute, Potato, Fruits',
+            'Sikkim': 'Major crops: Rice, Maize, Cardamom, Fruits',
+            'Arunachal Pradesh': 'Major crops: Rice, Maize, Pulses, Oilseeds'
+        };
+        
+        const info = stateInfo[state];
+        if (info) {
+            // Create or update info display
+            let infoDiv = document.getElementById('state-info');
+            if (!infoDiv) {
+                infoDiv = document.createElement('div');
+                infoDiv.id = 'state-info';
+                infoDiv.className = 'alert alert-info mt-2';
+                stateSelect.parentNode.appendChild(infoDiv);
+            }
+            infoDiv.innerHTML = `<i class="fas fa-info-circle me-2"></i><strong>${state}:</strong> ${info}`;
+        }
+    }
+    
+    // Add sample data buttons for testing
+    addSampleDataButtons();
+});
+
+// Function to add sample data buttons for testing
+function addSampleDataButtons() {
+    const form = document.querySelector('.needs-validation');
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    // Create sample data buttons container
+    const sampleContainer = document.createElement('div');
+    sampleContainer.className = 'text-center mt-3';
+    sampleContainer.innerHTML = `
+        <small class="text-muted mb-2 d-block">Quick Test Data:</small>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-secondary" onclick="fillSampleData('north')">North India</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="fillSampleData('south')">South India</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="fillSampleData('east')">East India</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="fillSampleData('west')">West India</button>
+        </div>
+    `;
+    
+    submitButton.parentNode.appendChild(sampleContainer);
+}
+
+// Function to fill sample data based on region
+function fillSampleData(region) {
+    const sampleData = {
+        'north': {
+            'nitrogen': 45, 'phosphorus': 35, 'potassium': 120, 'temperature': 25,
+            'humidity': 65, 'ph': 7.2, 'rainfall': 80, 'state': 'Punjab'
+        },
+        'south': {
+            'nitrogen': 55, 'phosphorus': 40, 'potassium': 150, 'temperature': 28,
+            'humidity': 75, 'ph': 6.8, 'rainfall': 120, 'state': 'Karnataka'
+        },
+        'east': {
+            'nitrogen': 50, 'phosphorus': 30, 'potassium': 110, 'temperature': 26,
+            'humidity': 80, 'ph': 6.5, 'rainfall': 150, 'state': 'West Bengal'
+        },
+        'west': {
+            'nitrogen': 40, 'phosphorus': 25, 'potassium': 90, 'temperature': 30,
+            'humidity': 60, 'ph': 7.5, 'rainfall': 60, 'state': 'Gujarat'
+        }
+    };
+    
+    const data = sampleData[region];
+    if (data) {
+        Object.keys(data).forEach(fieldName => {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.value = data[fieldName];
+                field.classList.add('is-valid');
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Trigger state change event
+        const stateSelect = document.getElementById('state-select');
+        if (stateSelect) {
+            stateSelect.value = data.state;
+            stateSelect.dispatchEvent(new Event('change'));
+        }
+    }
+}
+</script>
+{% endblock %}

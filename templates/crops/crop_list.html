@@ -1,0 +1,51 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Crops{% endblock %}
+
+{% block content %}
+<div class="pt-3 pb-2 mb-3 border-bottom">
+    <h2 class="h4 mb-0">Available Crops</h2>
+</div>
+
+{% if crops %}
+    <div class="row">
+        {% for crop in crops %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ crop.name }}</h5>
+                    <p class="card-text small text-muted">{{ crop.scientific_name }}</p>
+                    <div class="row g-2 small">
+                        <div class="col-6">
+                            <strong>Category:</strong> {{ crop.category }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Season:</strong> {{ crop.season }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Yield:</strong> {{ crop.yield_per_hectare }} tons/ha
+                        </div>
+                        <div class="col-6">
+                            <strong>Price:</strong> ₹{{ crop.market_price_per_kg }}/kg
+                        </div>
+                        <div class="col-6">
+                            <strong>Temp:</strong> {{ crop.min_temperature }}-{{ crop.max_temperature }}°C
+                        </div>
+                        <div class="col-6">
+                            <strong>pH:</strong> {{ crop.soil_ph_min }}-{{ crop.soil_ph_max }}
+                        </div>
+                    </div>
+                    <a href="{% url 'crop_detail' crop.id %}" class="btn btn-sm btn-outline-primary mt-2">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-0">No crops available.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

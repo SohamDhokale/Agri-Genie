@@ -1,0 +1,404 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Government Schemes{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 text-success dashboard-title">
+            <i class="fas fa-university me-2"></i>Government Schemes
+        </h1>
+        <p class="lead text-muted">Explore beneficial schemes for farmers</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary refresh-btn" onclick="refreshSchemes()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Category Filter -->
+<div class="card filter-card mb-4">
+    <div class="card-body">
+        <h5 class="card-title text-success">
+            <i class="fas fa-filter me-2"></i>Filter by Category
+        </h5>
+        <div class="btn-group" role="group">
+            <a href="{% url 'schemes_list' %}" class="btn btn-outline-success {% if not selected_category %}active{% endif %}">
+                <i class="fas fa-list me-1"></i>All Schemes
+            </a>
+            {% for category_code, category_name in categories %}
+            <a href="{% url 'schemes_list' %}?category={{ category_code }}" 
+               class="btn btn-outline-success {% if selected_category == category_code %}active{% endif %}">
+                {{ category_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Schemes List -->
+{% if schemes %}
+    <div class="row g-4">
+        {% for scheme in schemes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card scheme-card hover-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title text-success">{{ scheme.name }}</h5>
+                        <span class="badge bg-success scheme-badge">{{ scheme.get_category_display }}</span>
+                    </div>
+                    <p class="card-text text-muted">{{ scheme.description|truncatewords:20 }}</p>
+                    <div class="scheme-benefits mb-3">
+                        <strong class="text-success">Benefits:</strong> 
+                        <span class="text-muted">{{ scheme.benefits|truncatewords:10 }}</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'scheme_detail' scheme.id %}" class="btn btn-primary btn-sm scheme-btn">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                        
+                        {% if scheme.id in user_applications %}
+                            <!-- User has already applied -->
+                            <span class="badge bg-info application-status">
+                                <i class="fas fa-check me-1"></i>Applied
+                            </span>
+                        {% else %}
+                            <!-- User can apply -->
+                            <button class="btn btn-success btn-sm apply-now-btn" 
+                                    onclick="applyForScheme({{ scheme.id }}, '{{ scheme.name }}')"
+                                    data-scheme-id="{{ scheme.id }}">
+                                <i class="fas fa-paper-plane me-1"></i>Apply Now
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-calendar-alt me-1"></i>Added: {{ scheme.created_at|date:"M d, Y" }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card empty-state-card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-university fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">
+                {% if selected_category %}
+                    No schemes found in the "{{ selected_category }}" category.
+                {% else %}
+                    No government schemes available at the moment.
+                {% endif %}
+            </h5>
+            <p class="text-muted">Please check back later for new schemes.</p>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+/* Enhanced Schemes Page Styles */
+.dashboard-title {
+    animation: slideInLeft 0.8s ease-out;
+    transform: translateZ(25px);
+    text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.filter-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+}
+
+.filter-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.scheme-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transform: translateZ(15px);
+    box-shadow: 
+        0 6px 0 rgba(0,0,0,0.1),
+        0 8px 20px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.scheme-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(76, 199, 116, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.scheme-card:hover::before {
+    left: 100%;
+}
+
+.scheme-card:hover {
+    transform: translateY(-12px) translateZ(35px) scale(1.06);
+    box-shadow: 
+        0 20px 0 rgba(0,0,0,0.15),
+        0 25px 50px rgba(0,0,0,0.2);
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+}
+
+.scheme-badge {
+    transition: all 0.3s ease;
+    transform: translateZ(5px);
+}
+
+.scheme-card:hover .scheme-badge {
+    transform: translateZ(15px) scale(1.1);
+    box-shadow: 0 4px 8px rgba(76, 199, 116, 0.3);
+}
+
+.scheme-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(20px);
+    box-shadow: 
+        0 6px 0 rgba(0,0,0,0.2),
+        0 8px 20px rgba(0,0,0,0.2);
+}
+
+.scheme-btn:hover {
+    transform: translateY(-6px) translateZ(30px) scale(1.05);
+    box-shadow: 
+        0 12px 0 rgba(0,0,0,0.25),
+        0 15px 30px rgba(0,0,0,0.25);
+}
+
+.scheme-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.scheme-btn:hover::before {
+    left: 100%;
+}
+
+.scheme-benefits {
+    background: rgba(76, 199, 116, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+    transition: all 0.3s ease;
+}
+
+.scheme-card:hover .scheme-benefits {
+    background: rgba(76, 199, 116, 0.15);
+    transform: translateX(5px);
+}
+
+.empty-state-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+}
+
+.empty-state-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+}
+
+.refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 
+        0 4px 0 rgba(0,0,0,0.2),
+        0 6px 15px rgba(0,0,0,0.2);
+}
+
+.refresh-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    background-color: #4caf50;
+    border-color: #4caf50;
+    color: white;
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.4),
+        0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+/* Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive hover effects */
+@media (max-width: 768px) {
+    .scheme-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+    
+    .filter-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+}
+</style>
+
+<script>
+function refreshSchemes() { 
+    const btn = document.querySelector('.refresh-btn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function applyForScheme(schemeId, schemeName) {
+    const btn = document.querySelector(`[data-scheme-id="${schemeId}"]`);
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Applying...';
+    btn.disabled = true;
+    
+    fetch(`/schemes/quick-apply/${schemeId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success notification
+            showNotification(data.message, 'success');
+            
+            // Update button to show applied status
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Applied';
+            btn.className = 'btn btn-info btn-sm';
+            btn.disabled = true;
+            
+            // Redirect to application form after a short delay
+            setTimeout(() => {
+                window.location.href = `/schemes/${schemeId}/apply/`;
+            }, 1500);
+        } else {
+            showNotification(data.message, 'error');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to apply for scheme. Please try again.', 'error');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced card animations
+    document.querySelectorAll('.scheme-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+    
+    // Enhanced filter card animation
+    const filterCard = document.querySelector('.filter-card');
+    if (filterCard) {
+        filterCard.style.opacity = '0';
+        filterCard.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            filterCard.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            filterCard.style.opacity = '1';
+            filterCard.style.transform = 'translateY(0)';
+        }, 200);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ pesticide.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 text-success dashboard-title">
+            <i class="fas fa-spray-can me-2"></i>{{ pesticide.name }}
+        </h1>
+        <div class="mt-1">
+            <span class="badge bg-primary">{{ pesticide.get_category_display }}</span>
+            {% if pesticide.is_organic %}
+            <span class="badge bg-success">Organic</span>
+            {% endif %}
+        </div>
+    </div>
+    <div>
+        <a href="{% url 'pesticides_list' %}" class="btn btn-outline-secondary refresh-btn">
+            <i class="fas fa-arrow-left me-1"></i>Back to Pesticides
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <!-- Description -->
+        <div class="card mb-4 hover-card">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-info-circle me-2"></i>Description</h5>
+                <p class="card-text">{{ pesticide.description }}</p>
+            </div>
+        </div>
+
+        <!-- Target Pests -->
+        <div class="card mb-4 hover-card">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-bug me-2"></i>Target Pests</h5>
+                <p class="card-text">{{ pesticide.target_pests }}</p>
+            </div>
+        </div>
+
+        <!-- Application Method -->
+        <div class="card mb-4 hover-card">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-hand-sparkles me-2"></i>Application Method</h5>
+                <p class="card-text">{{ pesticide.application_method }}</p>
+            </div>
+        </div>
+
+        <!-- Safety Precautions -->
+        <div class="card mb-4 hover-card">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-shield-alt me-2"></i>Safety Precautions</h5>
+                <p class="card-text">{{ pesticide.safety_precautions }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Product Information -->
+        <div class="card mb-4 hover-card">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-info-circle me-2"></i>Product Information</h5>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <strong>Active Ingredient:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ pesticide.active_ingredient }}
+                    </div>
+                    <div class="col-6">
+                        <strong>Dosage:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ pesticide.dosage }}
+                    </div>
+                    <div class="col-6">
+                        <strong>Manufacturer:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ pesticide.manufacturer }}
+                    </div>
+                    {% if pesticide.price_range %}
+                    <div class="col-6">
+                        <strong>Price Range:</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="badge bg-info">{{ pesticide.price_range }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="col-6">
+                        <strong>Type:</strong>
+                    </div>
+                    <div class="col-6">
+                        {% if pesticide.is_organic %}
+                        <span class="badge bg-success">Organic</span>
+                        {% else %}
+                        <span class="badge bg-warning">Chemical</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-6">
+                        <strong>Added:</strong>
+                    </div>
+                    <div class="col-6">
+                        {{ pesticide.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card hover-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="https://www.amazon.in/s?k={{ pesticide.name }}+{{ pesticide.active_ingredient }}+pesticide" target="_blank" class="btn btn-success feature-btn">
+                        <i class="fas fa-shopping-cart me-1"></i>Buy Now
+                    </a>
+                    <button class="btn btn-outline-primary feature-btn" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>Print Details
+                    </button>
+                    <button class="btn btn-outline-info feature-btn" onclick="copyToClipboard()">
+                        <i class="fas fa-copy me-1"></i>Copy Information
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard() {
+    const pesticideInfo = `Pesticide: ${document.querySelector('h2').textContent}\n` +
+                         `Active Ingredient: {{ pesticide.active_ingredient }}\n` +
+                         `Category: {{ pesticide.get_category_display }}\n` +
+                         `Dosage: {{ pesticide.dosage }}\n` +
+                         `Manufacturer: {{ pesticide.manufacturer }}`;
+    
+    navigator.clipboard.writeText(pesticideInfo).then(function() {
+        alert('Pesticide information copied to clipboard!');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+</script>
+
+<style>
+/* Enhanced Dashboard Styles */
+.hover-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,.125);
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,.1);
+    border-color: rgba(76, 175, 80, 0.5);
+}
+
+.feature-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.feature-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    box-shadow: 0 8px 0 rgba(76, 175, 80, 0.4), 0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.refresh-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    background-color: #4caf50;
+    border-color: #4caf50;
+    color: white;
+    box-shadow: 0 8px 0 rgba(76, 175, 80, 0.4), 0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.dashboard-title {
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+</style>
+{% endblock %}

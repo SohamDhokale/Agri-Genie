@@ -1,0 +1,935 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}AI Agricultural Assistant - AgriGenie{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chatbot-header text-center mb-4">
+                <h1 class="display-4 text-white mb-3">
+                    <i class="fas fa-robot me-3"></i>AI Agricultural Assistant
+                </h1>
+                <p class="lead text-white-50">Your multilingual farming companion with expert agricultural knowledge</p>
+                <div class="language-badges mt-3">
+                    <span class="badge bg-light text-dark me-2">🌍 20+ Languages</span>
+                    <span class="badge bg-light text-dark me-2">🤖 AI Powered</span>
+                    <span class="badge bg-light text-dark me-2">🇮🇳 India Focused</span>
+                    <span class="badge bg-light text-dark">⏰ 24/7 Available</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="row">
+                <!-- Main Chat Interface -->
+                <div class="col-lg-8">
+                    <div class="chat-main-card bg-white rounded-4 shadow-lg">
+                        <!-- Chat Header -->
+                        <div class="chat-header bg-gradient-primary text-white p-4 rounded-top-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="ai-avatar me-3">
+                                        <i class="fas fa-robot fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">AgriGenie AI Assistant</h5>
+                                        <small class="opacity-75">
+                                            <i class="fas fa-circle text-success me-1"></i>Online
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="language-selector-main">
+                                    <select id="languageSelectMain" class="form-select form-select-sm bg-white text-dark">
+                                        <option value="">🌍 Auto-detect Language</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages -->
+                        <div id="chatMessages" class="chat-messages-container p-4">
+                            <!-- Welcome Message -->
+                            <div class="message bot-message">
+                                <div class="message-content">
+                                    <div class="d-flex align-items-start">
+                                        <div class="message-avatar bot-avatar">
+                                            <i class="fas fa-robot"></i>
+                                        </div>
+                                        <div class="message-bubble bot-bubble">
+                                            <div class="message-header">
+                                                <strong>AgriGenie AI</strong>
+                                                <span class="badge bg-primary ms-2">AI Assistant</span>
+                                                <span class="badge bg-info ms-1">English</span>
+                                            </div>
+                                            <div class="message-text">
+                                                <div class="welcome-content">
+                                                    <h6 class="text-primary mb-3">🌱 Welcome to AgriGenie AI Assistant!</h6>
+                                                    <p>I'm your expert agricultural companion with multilingual support. I can help you with:</p>
+                                                    <div class="row g-2 mb-3">
+                                                        <div class="col-6">
+                                                            <div class="feature-item">
+                                                                <i class="fas fa-seedling text-success"></i>
+                                                                <span>Crop recommendations</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="feature-item">
+                                                                <i class="fas fa-bug text-danger"></i>
+                                                                <span>Pest & disease control</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="feature-item">
+                                                                <i class="fas fa-leaf text-success"></i>
+                                                                <span>Soil health advice</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <div class="feature-item">
+                                                                <i class="fas fa-cloud-sun text-info"></i>
+                                                                <span>Weather guidance</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="language-commands">
+                                                        <h6 class="text-dark mb-2">🌍 Language Commands:</h6>
+                                                        <div class="row g-2">
+                                                            <div class="col-md-6">
+                                                                <button class="btn btn-outline-primary btn-sm w-100" onclick="setLanguage('hi')">
+                                                                    <i class="fas fa-flag me-1"></i>हिंदी (Hindi)
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <button class="btn btn-outline-primary btn-sm w-100" onclick="setLanguage('ta')">
+                                                                    <i class="fas fa-flag me-1"></i>தமிழ் (Tamil)
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <button class="btn btn-outline-primary btn-sm w-100" onclick="setLanguage('te')">
+                                                                    <i class="fas fa-flag me-1"></i>తెలుగు (Telugu)
+                                                                </button>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <button class="btn btn-outline-primary btn-sm w-100" onclick="setLanguage('bn')">
+                                                                    <i class="fas fa-flag me-1"></i>বাংলা (Bengali)
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="message-time">Just now</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input -->
+                        <div class="chat-input-section p-4 border-top">
+                            <div class="input-group">
+                                <input type="text" id="messageInput" class="form-control form-control-lg" 
+                                       placeholder="Ask me anything about farming in any language..." 
+                                       maxlength="500">
+                                <button id="sendButton" class="btn btn-primary btn-lg px-4">
+                                    <i class="fas fa-paper-plane me-2"></i>Send
+                                </button>
+                            </div>
+                            <div class="input-help mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Try: "How to deal with blackroot fungus in onions?" or "प्याज में काली जड़ फंगस से कैसे निपटें?"
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Language Settings -->
+                    <div class="sidebar-card bg-white rounded-4 shadow-lg p-4 mb-4">
+                        <h5 class="text-dark-green mb-3">
+                            <i class="fas fa-globe me-2"></i>Language Settings
+                        </h5>
+                        <div class="mb-3">
+                            <label for="languageSelectSidebar" class="form-label fw-bold">Preferred Language:</label>
+                            <select id="languageSelectSidebar" class="form-select">
+                                <option value="">🌍 Auto-detect</option>
+                            </select>
+                        </div>
+                        <div class="language-buttons">
+                            <h6 class="text-muted mb-2">Quick Language Set:</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="setLanguage('hi')">
+                                        🇮🇳 हिंदी
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="setLanguage('ta')">
+                                        🇮🇳 தமிழ்
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="setLanguage('te')">
+                                        🇮🇳 తెలుగు
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="setLanguage('bn')">
+                                        🇮🇳 বাংলা
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="setLanguage('mr')">
+                                        🇮🇳 मराठी
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button class="btn btn-outline-success btn-sm w-100" onclick="setLanguage('gu')">
+                                        🇮🇳 ગુજરાતી
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetConversation()">
+                                <i class="fas fa-undo me-1"></i>Reset Chat
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Questions -->
+                    <div class="sidebar-card bg-white rounded-4 shadow-lg p-4 mb-4">
+                        <h5 class="text-dark-green mb-3">
+                            <i class="fas fa-bolt me-2"></i>Quick Questions
+                        </h5>
+                        <div class="quick-questions">
+                            <button class="btn btn-outline-primary btn-sm w-100 mb-2 quick-question" 
+                                    data-question="How to deal with blackroot fungus in onions?">
+                                <i class="fas fa-bug me-2"></i>Disease Control
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm w-100 mb-2 quick-question" 
+                                    data-question="What's the best time to plant wheat?">
+                                <i class="fas fa-seedling me-2"></i>Planting Guide
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm w-100 mb-2 quick-question" 
+                                    data-question="How to improve soil fertility naturally?">
+                                <i class="fas fa-leaf me-2"></i>Soil Health
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm w-100 mb-2 quick-question" 
+                                    data-question="What are the symptoms of rice blast disease?">
+                                <i class="fas fa-microscope me-2"></i>Disease Symptoms
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm w-100 mb-2 quick-question" 
+                                    data-question="How to control aphids in cotton?">
+                                <i class="fas fa-spray-can me-2"></i>Pest Control
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm w-100 quick-question" 
+                                    data-question="Best practices for organic farming">
+                                <i class="fas fa-recycle me-2"></i>Organic Farming
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Features & Tips -->
+                    <div class="sidebar-card bg-white rounded-4 shadow-lg p-4">
+                        <h5 class="text-dark-green mb-3">
+                            <i class="fas fa-star me-2"></i>Features & Tips
+                        </h5>
+                        <div class="features-list">
+                            <div class="feature-item-sidebar">
+                                <i class="fas fa-robot text-primary"></i>
+                                <div>
+                                    <strong>AI-Powered</strong>
+                                    <small class="text-muted d-block">Expert agricultural advice</small>
+                                </div>
+                            </div>
+                            <div class="feature-item-sidebar">
+                                <i class="fas fa-globe text-success"></i>
+                                <div>
+                                    <strong>Multilingual</strong>
+                                    <small class="text-muted d-block">20+ languages supported</small>
+                                </div>
+                            </div>
+                            <div class="feature-item-sidebar">
+                                <i class="fas fa-india text-info"></i>
+                                <div>
+                                    <strong>India-Focused</strong>
+                                    <small class="text-muted d-block">Local farming practices</small>
+                                </div>
+                            </div>
+                            <div class="feature-item-sidebar">
+                                <i class="fas fa-clock text-warning"></i>
+                                <div>
+                                    <strong>24/7 Available</strong>
+                                    <small class="text-muted d-block">Get help anytime</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tips-section mt-3 pt-3 border-top">
+                            <h6 class="text-muted mb-2">💡 Tips:</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-check text-success me-1"></i>Ask in your preferred language</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Be specific about crop and region</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Include symptoms for disease queries</li>
+                                <li><i class="fas fa-check text-success me-1"></i>Use quick questions for common topics</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Header Styles */
+.chatbot-header {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    padding: 2rem 0;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+.language-badges .badge {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Main Chat Card */
+.chat-main-card {
+    border: none;
+    overflow: hidden;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    flex-shrink: 0;
+}
+
+.ai-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.language-selector-main select {
+    min-width: 150px;
+    border: none;
+    border-radius: 0.5rem;
+}
+
+/* Chat Messages */
+.chat-messages-container {
+    flex: 1;
+    overflow-y: auto;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    max-height: 400px;
+}
+
+.message {
+    margin-bottom: 1.5rem;
+}
+
+.message-content {
+    max-width: 85%;
+}
+
+.user-message .message-content {
+    margin-left: auto;
+}
+
+.bot-message .message-content {
+    margin-right: auto;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.bot-avatar {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    color: white;
+}
+
+.user-avatar {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+}
+
+.message-bubble {
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+/* Vertical numbered points in AI responses */
+.message-text ol, 
+.message-text ul {
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.message-text li {
+    margin-bottom: 0.5rem;
+    display: list-item;
+}
+
+/* Format numbered points that use digits followed by periods or parentheses */
+.message-text p {
+    margin-bottom: 0.5rem;
+}
+
+/* Convert text with number patterns like "1. text" or "1) text" to proper list items */
+.message-text p:has(~ p:first-line:matches(/^\d+[.)]\s/)) {
+    display: list-item;
+    margin-left: 1.5rem;
+}
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    margin-left: 1rem;
+}
+
+.bot-bubble {
+    background: white;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.user-bubble {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.message-text {
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    text-align: right;
+}
+
+/* Welcome Content */
+.welcome-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.language-commands {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+/* Chat Input */
+.chat-input-section {
+    background: white;
+    flex-shrink: 0;
+}
+
+.input-group .form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 0.5rem 0 0 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+.input-group .btn {
+    border-radius: 0 0.5rem 0.5rem 0;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+}
+
+/* Sidebar Cards */
+.sidebar-card {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.language-buttons .btn {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+}
+
+.quick-questions .btn {
+    text-align: left;
+    white-space: normal;
+    height: auto;
+    padding: 0.75rem;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.quick-questions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.feature-item-sidebar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.feature-item-sidebar:last-child {
+    border-bottom: none;
+}
+
+.feature-item-sidebar i {
+    font-size: 1.2rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    background: white;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #007bff;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .chat-main-card {
+        height: 500px;
+        margin-bottom: 2rem;
+    }
+    
+    .chat-messages-container {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .chatbot-header h1 {
+        font-size: 2rem;
+    }
+    
+    .message-content {
+        max-width: 95%;
+    }
+    
+    .language-badges .badge {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+/* Scrollbar Styling */
+.chat-messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-messages-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
+
+<script>
+let isTyping = false;
+let selectedLanguage = '';
+
+// DOM elements
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+const languageSelectMain = document.getElementById('languageSelectMain');
+const languageSelectSidebar = document.getElementById('languageSelectSidebar');
+
+// Load supported languages
+loadSupportedLanguages();
+
+// Event listeners
+sendButton.addEventListener('click', sendMessage);
+messageInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Quick question buttons
+document.querySelectorAll('.quick-question').forEach(button => {
+    button.addEventListener('click', function() {
+        const question = this.getAttribute('data-question');
+        messageInput.value = question;
+        sendMessage();
+    });
+});
+
+// Language selection change
+languageSelectMain.addEventListener('change', function() {
+    selectedLanguage = this.value;
+    languageSelectSidebar.value = this.value;
+    updateLanguageDisplay();
+});
+
+languageSelectSidebar.addEventListener('change', function() {
+    selectedLanguage = this.value;
+    languageSelectMain.value = this.value;
+    updateLanguageDisplay();
+});
+
+function loadSupportedLanguages() {
+    fetch('{% url "supported_languages" %}')
+        .then(response => response.json())
+        .then(data => {
+            const languages = data.languages;
+            languages.forEach(lang => {
+                const optionMain = document.createElement('option');
+                optionMain.value = lang.code;
+                optionMain.textContent = `${lang.flag} ${lang.name}`;
+                languageSelectMain.appendChild(optionMain);
+                
+                const optionSidebar = document.createElement('option');
+                optionSidebar.value = lang.code;
+                optionSidebar.textContent = `${lang.flag} ${lang.name}`;
+                languageSelectSidebar.appendChild(optionSidebar);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading languages:', error);
+        });
+}
+
+function updateLanguageDisplay() {
+    if (selectedLanguage) {
+        const languageNames = {
+            'hi': 'हिंदी (Hindi)',
+            'ta': 'தமிழ் (Tamil)',
+            'te': 'తెలుగు (Telugu)',
+            'bn': 'বাংলা (Bengali)',
+            'mr': 'मराठी (Marathi)',
+            'gu': 'ગુજરાતી (Gujarati)',
+            'kn': 'ಕನ್ನಡ (Kannada)',
+            'ml': 'മലയാളം (Malayalam)',
+            'pa': 'ਪੰਜਾਬੀ (Punjabi)',
+            'or': 'ଓଡ଼ିଆ (Odia)'
+        };
+        
+        const languageName = languageNames[selectedLanguage] || selectedLanguage;
+        messageInput.placeholder = `Ask me anything in ${languageName}...`;
+    } else {
+        messageInput.placeholder = 'Ask me anything about farming in any language...';
+    }
+}
+
+function setLanguage(langCode) {
+    selectedLanguage = langCode;
+    languageSelectMain.value = langCode;
+    languageSelectSidebar.value = langCode;
+    updateLanguageDisplay();
+    
+    const message = `set language ${langCode}`;
+    messageInput.value = message;
+    sendMessage();
+}
+
+function resetConversation() {
+    const message = 'reset';
+    messageInput.value = message;
+    sendMessage();
+}
+
+function sendMessage() {
+    const message = messageInput.value.trim();
+    if (!message || isTyping) return;
+    
+    // Add user message
+    addMessage(message, 'user');
+    messageInput.value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    // Prepare request data
+    const requestData = {
+        message: message
+    };
+    
+    if (selectedLanguage) {
+        requestData.target_language = selectedLanguage;
+    }
+    
+    // Send to AI
+    fetch('{% url "chat_with_ai" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideTypingIndicator();
+        
+        if (data.error) {
+            addMessage('Sorry, I encountered an error: ' + data.error, 'bot', false);
+        } else {
+            addMessage(data.response, 'bot', data.ai_generated, data.language_info);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        hideTypingIndicator();
+        addMessage('Sorry, I\'m having trouble connecting right now. Please try again.', 'bot', false);
+    });
+}
+
+function addMessage(text, sender, aiGenerated = false, languageInfo = null) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}-message`;
+    
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    let aiBadge = '';
+    if (aiGenerated) {
+        aiBadge = '<span class="badge bg-primary ms-2">AI Generated</span>';
+    }
+    
+    let languageBadge = '';
+    if (languageInfo && languageInfo.response_language) {
+        languageBadge = `<span class="badge bg-info ms-1">${languageInfo.response_language}</span>`;
+    }
+    
+    // Format the text to convert numbered points to proper lists
+    let formattedText = text;
+    if (sender === 'bot') {
+        formattedText = formatNumberedPoints(text);
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="d-flex align-items-start">
+                <div class="message-avatar ${sender}-avatar">
+                    <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+                </div>
+                <div class="message-bubble ${sender}-bubble">
+                    <div class="message-header">
+                        <strong>${sender === 'user' ? 'You' : 'AgriGenie AI'}</strong>
+                        ${aiBadge}
+                        ${languageBadge}
+                    </div>
+                    <div class="message-text">${formattedText}</div>
+                    <div class="message-time">${timestamp}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Function to format text into pointwise format
+function formatNumberedPoints(text) {
+    // First remove any trailing numbers at the end of sentences (like "text. 1." or "text! 2.")
+    text = text.replace(/\s+\d+[.)]\s*(?=$|\n)/g, '');
+    
+    // Check for existing numbered points pattern (e.g., "1. " or "1) " at the beginning of lines)
+    const numberedPointsPattern = /(?:^|\n)(\d+[.)]\s+[^\n]+)/g;
+    
+    if (numberedPointsPattern.test(text)) {
+        // Reset the regex lastIndex
+        numberedPointsPattern.lastIndex = 0;
+        
+        // Replace the text with an unordered list (bullet points)
+        let listItems = [];
+        let match;
+        
+        // Extract all numbered points
+        while ((match = numberedPointsPattern.exec(text)) !== null) {
+            // Get the content after the number and delimiter
+            const pointContent = match[1].replace(/^\d+[.)]\s+/, '');
+            // Remove any trailing numbers like "text 1." or "text 2."
+            const cleanContent = pointContent.replace(/\s+\d+[.)]\s*$/g, '');
+            listItems.push(`<li>${cleanContent}</li>`);
+        }
+        
+        // Replace the numbered points section with an unordered list
+        if (listItems.length > 0) {
+            // Find the start of the first numbered point
+            const firstPointIndex = text.search(numberedPointsPattern);
+            
+            // Get the text before the numbered points
+            const textBeforePoints = text.substring(0, firstPointIndex);
+            
+            // Create the HTML with the unordered list (bullet points)
+            return `${textBeforePoints}<ul>${listItems.join('')}</ul>`;
+        }
+    }
+    
+    // Always convert text to bullet points, regardless of paragraph count
+    // First, handle any special case where the text is very short or empty
+    if (!text.trim()) {
+        return text;
+    }
+    
+    // Split by sentences or natural breaks
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    
+    // If we only have one sentence and it's short, don't convert to bullet
+    if (sentences.length === 1 && sentences[0].length < 50) {
+        return text;
+    }
+    
+    // Filter out empty sentences
+    const nonEmptySentences = sentences.filter(s => s.trim().length > 0);
+    
+    // Convert all sentences to bullet points and remove trailing numbers
+    const listItems = nonEmptySentences.map(s => {
+        // Remove trailing numbers like "text 1." or "text 2."
+        const cleanSentence = s.trim().replace(/\s+\d+[.)]\s*$/g, '');
+        return `<li>${cleanSentence}</li>`;
+    }).join('');
+    
+    return `<ul>${listItems}</ul>`;
+}
+
+function showTypingIndicator() {
+    isTyping = true;
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    typingDiv.innerHTML = `
+        <div class="d-flex align-items-start">
+            <div class="message-avatar bot-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-bubble bot-bubble">
+                <div class="message-header">
+                    <strong>AgriGenie AI</strong>
+                    <span class="badge bg-secondary ms-2">Typing...</span>
+                </div>
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function hideTypingIndicator() {
+    isTyping = false;
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-focus on input
+document.addEventListener('DOMContentLoaded', function() {
+    messageInput.focus();
+    
+    // Add smooth scrolling to chat container
+    chatMessages.style.scrollBehavior = 'smooth';
+});
+</script>
+{% endblock %}

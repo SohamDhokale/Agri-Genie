@@ -1,0 +1,368 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Crop Recommendations - AgriGenie{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="result-header text-center mb-4">
+                <h1 class="display-4 text-white mb-3">
+                    <i class="fas fa-chart-line me-3"></i>Crop Recommendations
+                </h1>
+                <p class="lead text-white-50">Personalized recommendations based on your soil and climate data</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendation Summary -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-lg-8 col-md-10">
+            <div class="summary-card bg-white rounded-4 shadow-lg p-4">
+                <h4 class="text-dark-green mb-3">
+                    <i class="fas fa-info-circle me-2"></i>Recommendation Summary
+                </h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Location:</strong> {{ recommendation.state }}</p>
+                        <p><strong>Temperature:</strong> {{ recommendation.temperature }}°C</p>
+                        <p><strong>Humidity:</strong> {{ recommendation.humidity }}%</p>
+                        <p><strong>Rainfall:</strong> {{ recommendation.rainfall }} mm</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Soil pH:</strong> {{ recommendation.soil_ph }}</p>
+                        <p><strong>Nitrogen (N):</strong> {{ recommendation.nitrogen }} kg/ha</p>
+                        <p><strong>Phosphorus (P):</strong> {{ recommendation.phosphorus }} kg/ha</p>
+                        <p><strong>Potassium (K):</strong> {{ recommendation.potassium }} kg/ha</p>
+                    </div>
+                </div>
+                <p class="text-muted mb-0">
+                    <small>Generated on {{ recommendation.created_at|date:"F j, Y" }} at {{ recommendation.created_at|time:"g:i A" }}</small>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crop Recommendations -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="recommendations-card bg-white rounded-4 shadow-lg p-4">
+                <h4 class="text-dark-green mb-4">
+                    <i class="fas fa-seedling me-2"></i>Recommended Crops
+                </h4>
+                
+                {% if recommended_crops %}
+                    <div class="row g-4">
+                        {% for recommended_crop in recommended_crops %}
+                        <div class="col-lg-6 col-md-12">
+                            <div class="crop-card bg-light-green rounded-4 p-4 h-100">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="text-dark-green mb-0">{{ recommended_crop.crop.name }}</h5>
+                                    <span class="badge bg-success fs-6">{{ recommended_crop.suitability_score }}% Match</span>
+                                </div>
+                                
+                                <div class="crop-details mb-3">
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-leaf me-2"></i>
+                                        <strong>Scientific Name:</strong> {{ recommended_crop.crop.scientific_name }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-tag me-2"></i>
+                                        <strong>Category:</strong> {{ recommended_crop.crop.category }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        <strong>Season:</strong> {{ recommended_crop.crop.season }}
+                                    </p>
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-clock me-2"></i>
+                                        <strong>Growing Period:</strong> {{ recommended_crop.crop.growing_period_days }} days
+                                    </p>
+                                </div>
+
+                                <div class="crop-stats mb-3">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="stat-item">
+                                                <div class="stat-value text-success fw-bold">{{ recommended_crop.expected_yield|floatformat:1 }}</div>
+                                                <div class="stat-label text-muted small">Tons/Ha</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="stat-item">
+                                                <div class="stat-value text-success fw-bold">₹{{ recommended_crop.expected_profit|floatformat:0 }}</div>
+                                                <div class="stat-label text-muted small">Expected Profit</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="stat-item">
+                                                <div class="stat-value text-success fw-bold">₹{{ recommended_crop.crop.market_price_per_kg|floatformat:1 }}</div>
+                                                <div class="stat-label text-muted small">Price/Kg</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Price Forecast Section -->
+                                <div class="price-forecast mb-3">
+                                    <h6 class="text-dark-green mb-2">
+                                        <i class="fas fa-chart-line me-2"></i>Price Forecast (Next 6 Months)
+                                    </h6>
+                                    <button class="btn btn-sm btn-outline-success mb-2 toggle-forecast" data-crop-id="{{ recommended_crop.crop.id }}">
+                                        <i class="fas fa-eye me-1"></i>View Price Forecast
+                                    </button>
+                                    <div class="forecast-details" id="forecast-{{ recommended_crop.crop.id }}" style="display: none;">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Month</th>
+                                                        <th>Price/Kg</th>
+                                                        <th>Change</th>
+                                                        <th>Trend</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for crop_forecast in crops_with_forecasts %}
+                                                        {% if crop_forecast.recommendation.id == recommended_crop.id %}
+                                                            {% for forecast in crop_forecast.forecasts %}
+                                                                <tr>
+                                                                    <td>{{ forecast.month }}/{{ forecast.year }}</td>
+                                                                    <td>₹{{ forecast.forecasted_price }}</td>
+                                                                    <td>
+                                                                        {% if forecast.price_change_percentage > 0 %}
+                                                                            <span class="text-success">+{{ forecast.price_change_percentage }}%</span>
+                                                                        {% elif forecast.price_change_percentage < 0 %}
+                                                                            <span class="text-danger">{{ forecast.price_change_percentage }}%</span>
+                                                                        {% else %}
+                                                                            <span class="text-muted">0%</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td>
+                                                                        {% if forecast.price_change_percentage > 0 %}
+                                                                            <span class="badge bg-success">Rising</span>
+                                                                        {% elif forecast.price_change_percentage < 0 %}
+                                                                            <span class="badge bg-danger">Falling</span>
+                                                                        {% else %}
+                                                                            <span class="badge bg-secondary">Stable</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="climate-impact mt-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-cloud me-1"></i>
+                                                <strong>Climate Impact:</strong> 
+                                                {% for crop_forecast in crops_with_forecasts %}
+                                                    {% if crop_forecast.recommendation.id == recommended_crop.id and crop_forecast.forecasts.0 %}
+                                                        {{ crop_forecast.forecasts.0.climate_impact }}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="crop-requirements">
+                                    <h6 class="text-dark-green mb-2">Growing Requirements:</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-thermometer-half me-1"></i>
+                                                Temp: {{ recommended_crop.crop.min_temperature }}-{{ recommended_crop.crop.max_temperature }}°C
+                                            </small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-tint me-1"></i>
+                                                pH: {{ recommended_crop.crop.soil_ph_min }}-{{ recommended_crop.crop.soil_ph_max }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-1">
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-cloud-rain me-1"></i>
+                                                Rainfall: {{ recommended_crop.crop.min_rainfall }}-{{ recommended_crop.crop.max_rainfall }}mm
+                                            </small>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                Suitable States
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                        <h5 class="text-muted">No suitable crops found</h5>
+                        <p class="text-muted">Try adjusting your soil and climate parameters to get better recommendations.</p>
+                        <a href="{% url 'crop_recommendation' %}" class="btn btn-success">
+                            <i class="fas fa-redo me-2"></i>Try Again
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row justify-content-center mt-4">
+        <div class="col-lg-8 col-md-10 text-center">
+            <a href="{% url 'crop_recommendation' %}" class="btn btn-outline-success me-3">
+                <i class="fas fa-plus me-2"></i>New Recommendation
+            </a>
+            <a href="{% url 'crop_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-2"></i>Browse All Crops
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Price Forecast Toggle -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-forecast');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const cropId = this.getAttribute('data-crop-id');
+                const forecastDetails = document.getElementById('forecast-' + cropId);
+                
+                if (forecastDetails.style.display === 'none') {
+                    forecastDetails.style.display = 'block';
+                    this.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Price Forecast';
+                } else {
+                    forecastDetails.style.display = 'none';
+                    this.innerHTML = '<i class="fas fa-eye me-1"></i>View Price Forecast';
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+.result-header {
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+    padding: 2rem 0;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card, .recommendations-card {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover, .crop-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.price-forecast {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.forecast-details {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.crop-card {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.crop-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+}
+
+.crop-card:hover {
+    transform: translateY(-3px);
+    border-color: #48c774;
+    box-shadow: 0 8px 25px rgba(72, 199, 116, 0.2);
+}
+
+.stat-item {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.badge {
+    font-weight: 600;
+    padding: 0.5rem 0.75rem;
+}
+
+.btn-outline-success {
+    border-color: #48c774;
+    color: #48c774;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-success:hover {
+    background-color: #48c774;
+    border-color: #48c774;
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .result-header h1 {
+        font-size: 2rem;
+    }
+    
+    .crop-card {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}

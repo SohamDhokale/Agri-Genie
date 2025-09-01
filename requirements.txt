@@ -1,0 +1,17 @@
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+requests==2.31.0
+Pillow==10.1.0
+python-decouple==3.8
+geopy==2.4.1
+openai==1.101.0
+pycountry==23.12.11
+langdetect==1.0.9
+gTTS==2.5.3
+pygame==2.6.1
+pyttsx3==2.90
+PyPDF2==3.0.1
+reportlab==4.2.5
+pytesseract==0.3.13
+SpeechRecognition==3.10.0

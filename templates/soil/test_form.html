@@ -1,0 +1,38 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Soil Test{% endblock %}
+
+{% block content %}
+<div class="pt-3 pb-2 mb-3 d-flex align-items-center justify-content-between border-bottom">
+    <h2 class="h4 mb-0">Soil Analysis Test</h2>
+    <a href="{% url 'soil_pdf_tools' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-file-pdf me-1"></i> PDF Tools
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="col-md-6">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                        {% if field.errors %}
+                            <div class="text-danger small">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary">Analyze Soil</button>
+                <a href="{% url 'soil_pdf_tools' %}" class="btn btn-outline-secondary"><i class="fas fa-file-pdf me-1"></i> PDF Tools</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

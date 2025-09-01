@@ -1,0 +1,232 @@
+{% extends 'base/base.html' %}
+
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 text-success dashboard-title">
+            <i class="fas fa-list-alt me-2"></i>My Applications
+        </h1>
+        <p class="lead text-muted">Track your government scheme applications</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'schemes_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Schemes
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if applications %}
+    <div class="row g-4">
+        {% for application in applications %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card application-card hover-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title text-success">{{ application.scheme.name }}</h5>
+                        <span class="badge bg-{{ application.status }} application-status">
+                            {{ application.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="application-details mb-3">
+                        <div class="detail-item">
+                            <strong class="text-success">Applied:</strong>
+                            <span>{{ application.application_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong class="text-success">Category:</strong>
+                            <span>{{ application.scheme.get_category_display }}</span>
+                        </div>
+                        {% if application.farm_size %}
+                        <div class="detail-item">
+                            <strong class="text-success">Farm Size:</strong>
+                            <span>{{ application.farm_size }} hectares</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'application_detail' application.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View Details
+                        </a>
+                        {% if application.status in 'pending,submitted' %}
+                        <button class="btn btn-danger btn-sm" onclick="withdrawApplication({{ application.id }})">
+                            <i class="fas fa-times me-1"></i>Withdraw
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-clock me-1"></i>Last updated: {{ application.last_updated|date:"M d, Y H:i" }}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card empty-applications-card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No Applications Yet</h5>
+            <p class="text-muted">You haven't applied for any government schemes yet.</p>
+            <a href="{% url 'schemes_list' %}" class="btn btn-success">
+                <i class="fas fa-search me-2"></i>Browse Schemes
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+/* Enhanced My Applications Styles */
+.dashboard-title {
+    animation: slideInLeft 0.8s ease-out;
+    transform: translateZ(25px);
+    text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.application-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 
+        0 6px 0 rgba(0,0,0,0.1),
+        0 8px 20px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.application-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(76, 199, 116, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.application-card:hover::before {
+    left: 100%;
+}
+
+.application-card:hover {
+    transform: translateY(-12px) translateZ(35px) scale(1.06);
+    box-shadow: 
+        0 20px 0 rgba(0,0,0,0.15),
+        0 25px 50px rgba(0,0,0,0.2);
+    border-color: #4caf50;
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+}
+
+.application-status {
+    transition: all 0.3s ease;
+    transform: translateZ(5px);
+}
+
+.application-card:hover .application-status {
+    transform: translateZ(15px) scale(1.1);
+    box-shadow: 0 4px 8px rgba(76, 199, 116, 0.3);
+}
+
+.application-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: rgba(76, 199, 116, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #4caf50;
+    transition: all 0.3s ease;
+}
+
+.application-card:hover .detail-item {
+    background: rgba(76, 199, 116, 0.15);
+    transform: translateX(3px);
+}
+
+.empty-applications-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+}
+
+.empty-applications-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+}
+
+/* Status color classes */
+.bg-pending { background-color: #ffc107 !important; }
+.bg-submitted { background-color: #17a2b8 !important; }
+.bg-under_review { background-color: #fd7e14 !important; }
+.bg-approved { background-color: #28a745 !important; }
+.bg-rejected { background-color: #dc3545 !important; }
+.bg-completed { background-color: #6f42c1 !important; }
+
+/* Additional status colors for different naming */
+.bg-info { background-color: #17a2b8 !important; }
+.bg-warning { background-color: #ffc107 !important; }
+.bg-success { background-color: #28a745 !important; }
+.bg-danger { background-color: #dc3545 !important; }
+.bg-primary { background-color: #6f42c1 !important; }
+
+/* Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive hover effects */
+@media (max-width: 768px) {
+    .application-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+}
+</style>
+
+<script>
+function withdrawApplication(applicationId) {
+    if (confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
+        window.location.href = `/schemes/withdraw/${applicationId}/`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced card animations
+    document.querySelectorAll('.application-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+});
+</script>
+{% endblock %}

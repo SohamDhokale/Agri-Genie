@@ -1,0 +1,307 @@
+{% extends 'base/base.html' %}
+{% load humanize %}
+
+{% block title %}Export Opportunity{% endblock %}
+
+{% block extra_head %}
+<!-- Simple styles for export details -->
+<style>
+    /* Detail Card Styles */
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    }
+    
+    /* Detail Header */
+    .detail-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-header h2 {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Badges */
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+    }
+    
+    /* Progress bars */
+    .progress {
+        height: 20px;
+        border-radius: 0.25rem;
+        background-color: #e9ecef;
+    }
+    
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 500;
+    }
+    
+    /* List group items */
+    .list-group-item {
+        transition: background-color 0.2s ease;
+    }
+    
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pt-3 pb-2 mb-3 border-bottom d-flex align-items-center justify-content-between">
+    <h2 class="h4 mb-0">Export Opportunity</h2>
+    <a href="{% url 'exports_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Back to list
+    </a>
+</div>
+
+<div class="row">
+    <!-- Main information card -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">{{ item.product }} - {{ item.country }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <div class="fs-5 mb-1">{{ item.product }}</div>
+                        <div class="text-muted">Destination: {{ item.country }}</div>
+                    </div>
+                    <span class="badge {% if item.demand_level == 'High' %}bg-success{% elif item.demand_level == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ item.demand_level }}</span>
+                </div>
+                
+                <h6 class="border-bottom pb-2 mb-3">Product Information</h6>
+                <dl class="row">
+                    <dt class="col-sm-3">Notes</dt>
+                    <dd class="col-sm-9">{{ item.notes }}</dd>
+
+                    <dt class="col-sm-3">Export Volume</dt>
+                    <dd class="col-sm-9">{{ item.export_volume }} tons</dd>
+                    
+                    <dt class="col-sm-3">Market Share</dt>
+                    <dd class="col-sm-9">{{ item.market_share|floatformat:2 }} ({{ item.market_share|floatformat:0 }}%)</dd>
+                    
+                    <dt class="col-sm-3">Growth Potential</dt>
+                    <dd class="col-sm-9">{{ item.potential_growth|floatformat:2 }} ({{ item.potential_growth|floatformat:0 }}%)</dd>
+
+                    <dt class="col-sm-3">Last Updated</dt>
+                    <dd class="col-sm-9">{{ item.updated_at|date:"M d, Y h:i A" }}</dd>
+                </dl>
+                
+                <h6 class="border-bottom pb-2 mb-3 mt-4">Contact Information</h6>
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Contact Person</dt>
+                    <dd class="col-sm-9">{{ item.contact_name }}</dd>
+                    
+                    <dt class="col-sm-3">Email</dt>
+                    <dd class="col-sm-9"><a href="mailto:{{ item.contact_email }}">{{ item.contact_email }}</a></dd>
+                    
+                    <dt class="col-sm-3">Phone</dt>
+                    <dd class="col-sm-9"><a href="tel:{{ item.contact_phone }}">{{ item.contact_phone }}</a></dd>
+                    
+                    {% if item.contact_website %}
+                    <dt class="col-sm-3">Website</dt>
+                    <dd class="col-sm-9"><a href="{{ item.contact_website }}" target="_blank">{{ item.contact_website }}</a></dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+        
+        {% if related_products %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Other Products from {{ item.country }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for product in related_products %}
+                    <a href="{% url 'export_detail' product.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ product.product }}</h6>
+                            <span class="badge {% if product.demand_level == 'High' %}bg-success{% elif product.demand_level == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ product.demand_level }}</span>
+                        </div>
+                        <small>Contact: {{ product.contact_name }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Export Statistics -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Export Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Market Share</h6>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ item.market_share|floatformat:0 }}%;" 
+                            aria-valuenow="{{ item.market_share|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ item.market_share|floatformat:0 }}%
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">Current Value: {{ item.market_share|floatformat:2 }}</small>
+                        {% if item.market_share > 0.3 %}
+                            <span class="badge bg-success">Strong Position</span>
+                        {% elif item.market_share > 0.15 %}
+                            <span class="badge bg-warning text-dark">Moderate Position</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Emerging Position</span>
+                        {% endif %}
+                    </div>
+                    <div class="small mt-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        {% if item.market_share > 0.3 %}
+                            Well-established market presence with significant share.
+                        {% elif item.market_share > 0.15 %}
+                            Established market presence with room for growth.
+                        {% else %}
+                            Early market entry with substantial growth opportunity.
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Growth Potential</h6>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.potential_growth|floatformat:0 }}%;" 
+                            aria-valuenow="{{ item.potential_growth|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ item.potential_growth|floatformat:0 }}%
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">Projected Growth: {{ item.potential_growth|floatformat:2 }}</small>
+                        {% if item.potential_growth > 0.3 %}
+                            <span class="badge bg-success">High Growth</span>
+                        {% elif item.potential_growth > 0.15 %}
+                            <span class="badge bg-warning text-dark">Moderate Growth</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Low Growth</span>
+                        {% endif %}
+                    </div>
+                    <div class="small mt-2">
+                        <i class="fas fa-chart-line me-1"></i>
+                        {% if item.potential_growth > 0.3 %}
+                            Excellent growth trajectory expected in the next 12 months.
+                        {% elif item.potential_growth > 0.15 %}
+                            Steady growth expected in the coming year.
+                        {% else %}
+                            Limited growth potential in the current market conditions.
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2">Demand Level</h6>
+                    <div class="p-2 border rounded">
+                        {% if item.demand_level == 'High' %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-2 text-success"><i class="fas fa-arrow-up"></i></div>
+                            <div>
+                                <strong>High Demand</strong>
+                                <div class="small text-muted">Strong market interest</div>
+                            </div>
+                        </div>
+                        <div class="mt-2 pt-2 border-top small">
+                            <div class="mb-1"><i class="fas fa-check-circle text-success me-1"></i> Consistent buyer inquiries</div>
+                            <div class="mb-1"><i class="fas fa-check-circle text-success me-1"></i> Competitive pricing advantage</div>
+                            <div><i class="fas fa-check-circle text-success me-1"></i> Year-round demand stability</div>
+                        </div>
+                        <div class="mt-2 small text-success">
+                            <i class="fas fa-lightbulb me-1"></i> <strong>Recommendation:</strong> Increase production capacity
+                        </div>
+                        {% elif item.demand_level == 'Medium' %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-2 text-warning"><i class="fas fa-arrow-right"></i></div>
+                            <div>
+                                <strong>Medium Demand</strong>
+                                <div class="small text-muted">Stable market interest</div>
+                            </div>
+                        </div>
+                        <div class="mt-2 pt-2 border-top small">
+                            <div class="mb-1"><i class="fas fa-check-circle text-warning me-1"></i> Regular buyer interest</div>
+                            <div class="mb-1"><i class="fas fa-check-circle text-warning me-1"></i> Competitive market position</div>
+                            <div><i class="fas fa-check-circle text-warning me-1"></i> Seasonal demand fluctuations</div>
+                        </div>
+                        <div class="mt-2 small text-warning">
+                            <i class="fas fa-lightbulb me-1"></i> <strong>Recommendation:</strong> Maintain current production levels
+                        </div>
+                        {% else %}
+                        <div class="d-flex align-items-center">
+                            <div class="me-2 text-secondary"><i class="fas fa-arrow-down"></i></div>
+                            <div>
+                                <strong>Low Demand</strong>
+                                <div class="small text-muted">Limited market interest</div>
+                            </div>
+                        </div>
+                        <div class="mt-2 pt-2 border-top small">
+                            <div class="mb-1"><i class="fas fa-exclamation-circle text-secondary me-1"></i> Sporadic buyer interest</div>
+                            <div class="mb-1"><i class="fas fa-exclamation-circle text-secondary me-1"></i> Price sensitivity challenges</div>
+                            <div><i class="fas fa-exclamation-circle text-secondary me-1"></i> Highly seasonal demand</div>
+                        </div>
+                        <div class="mt-2 small text-secondary">
+                            <i class="fas fa-lightbulb me-1"></i> <strong>Recommendation:</strong> Explore alternative markets
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="alert alert-info small mb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-boxes me-2"></i>
+                            <strong>Export Volume:</strong> {{ item.export_volume|intcomma }} tons
+                        </div>
+                        {% if item.export_volume > 10000 %}
+                            <span class="badge bg-primary">High Volume</span>
+                        {% elif item.export_volume > 5000 %}
+                            <span class="badge bg-info">Medium Volume</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Low Volume</span>
+                        {% endif %}
+                    </div>
+                    <div class="mt-2">
+                        <i class="fas fa-chart-bar me-1"></i>
+                        {% if item.export_volume > 10000 %}
+                            Large-scale export operation with significant market impact.
+                        {% elif item.export_volume > 5000 %}
+                            Mid-sized export operation with steady market presence.
+                        {% else %}
+                            Smaller export operation with specialized market focus.
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Log the export data for debugging
+        console.log('Export Detail Data Available:', {{ item.id }});
+        // No animation scripts needed for the simplified export service display
+    });
+</script>
+{% endblock %}

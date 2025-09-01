@@ -1,0 +1,437 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Apply for {{ scheme.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 text-success dashboard-title">
+            <i class="fas fa-paper-plane me-2"></i>Apply for {{ scheme.name }}
+        </h1>
+        <p class="lead text-muted">Complete your application details below</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'scheme_detail' scheme.id %}" class="btn btn-outline-secondary back-btn">
+                <i class="fas fa-arrow-left me-1"></i>Back to Scheme
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <!-- Application Form -->
+        <div class="card apply-form-card">
+            <div class="card-body">
+                <h5 class="card-title text-success mb-4">
+                    <i class="fas fa-edit me-2"></i>Application Form
+                </h5>
+                
+                <form method="post" class="application-form">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- Personal Information -->
+                        <div class="col-12">
+                            <h6 class="text-success mb-3">
+                                <i class="fas fa-user me-2"></i>Personal Information
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                                    {{ form.full_name.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                    <div class="text-danger small">{{ form.full_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    {{ form.phone_number.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="text-danger small">{{ form.phone_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    {{ form.email.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">
+                                    {{ form.address.label }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="text-danger small">{{ form.address.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Farm Information -->
+                        <div class="col-12">
+                            <h6 class="text-success mb-3 mt-4">
+                                <i class="fas fa-tractor me-2"></i>Farm Information
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.farm_size.id_for_label }}" class="form-label">
+                                    {{ form.farm_size.label }}
+                                </label>
+                                {{ form.farm_size }}
+                                {% if form.farm_size.errors %}
+                                    <div class="text-danger small">{{ form.farm_size.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.crop_type.id_for_label }}" class="form-label">
+                                    {{ form.crop_type.label }}
+                                </label>
+                                {{ form.crop_type }}
+                                {% if form.crop_type.errors %}
+                                    <div class="text-danger small">{{ form.crop_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.annual_income.id_for_label }}" class="form-label">
+                                    {{ form.annual_income.label }}
+                                </label>
+                                {{ form.annual_income }}
+                                {% if form.annual_income.errors %}
+                                    <div class="text-danger small">{{ form.annual_income.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Information -->
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                    {{ form.notes.label }}
+                                </label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg submit-btn">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Application
+                        </button>
+                        <a href="{% url 'scheme_detail' scheme.id %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Scheme Information -->
+        <div class="card scheme-info-card">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-info-circle me-2"></i>Scheme Information
+                </h5>
+                
+                <div class="scheme-info">
+                    <div class="info-item">
+                        <strong class="text-success">Scheme:</strong>
+                        <span>{{ scheme.name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-success">Category:</strong>
+                        <span>{{ scheme.get_category_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong class="text-success">Status:</strong>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="text-success">Benefits</h6>
+                <p class="text-muted small">{{ scheme.benefits|truncatewords:20 }}</p>
+                
+                <h6 class="text-success">Eligibility</h6>
+                <p class="text-muted small">{{ scheme.eligibility|truncatewords:15 }}</p>
+                
+                {% if scheme.website_url %}
+                <div class="mt-3">
+                    <a href="{{ scheme.website_url }}" target="_blank" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-external-link-alt me-1"></i>Visit Official Website
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Application Tips -->
+        <div class="card tips-card mt-3">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-lightbulb me-2"></i>Application Tips
+                </h5>
+                <ul class="tips-list">
+                    <li>Ensure all required fields are filled</li>
+                    <li>Provide accurate contact information</li>
+                    <li>Include relevant farm details</li>
+                    <li>Double-check your information before submitting</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhanced Application Form Styles */
+.dashboard-title {
+    animation: slideInLeft 0.8s ease-out;
+    transform: translateZ(25px);
+    text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.back-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 
+        0 4px 0 rgba(0,0,0,0.2),
+        0 6px 15px rgba(0,0,0,0.2);
+}
+
+.back-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    background-color: #4caf50;
+    border-color: #4caf50;
+    color: white;
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.4),
+        0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.apply-form-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+}
+
+.apply-form-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.scheme-info-card, .tips-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+}
+
+.scheme-info-card:hover, .tips-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2d5a27;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    box-shadow: 
+        0 4px 0 rgba(0,0,0,0.1),
+        0 6px 15px rgba(0,0,0,0.1),
+        0 0 0 1px rgba(255,255,255,0.5) inset;
+    transform: translateZ(10px);
+}
+
+.form-control:focus {
+    transform: translateY(-4px) translateZ(20px) scale(1.02);
+    box-shadow: 
+        0 8px 0 rgba(76, 199, 116, 0.3),
+        0 12px 25px rgba(76, 199, 116, 0.3),
+        0 0 0 1px rgba(255,255,255,0.6) inset;
+    border-color: #4caf50;
+}
+
+.submit-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(30px);
+    box-shadow: 
+        0 8px 0 rgba(40, 167, 69, 0.4),
+        0 12px 25px rgba(40, 167, 69, 0.4);
+}
+
+.submit-btn:hover {
+    transform: translateY(-8px) translateZ(40px) scale(1.05);
+    box-shadow: 
+        0 16px 0 rgba(40, 167, 69, 0.5),
+        0 20px 40px rgba(40, 167, 69, 0.5);
+}
+
+.submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.submit-btn:hover::before {
+    left: 100%;
+}
+
+.scheme-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(76, 199, 116, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: rgba(76, 199, 116, 0.15);
+    transform: translateX(5px);
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tips-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(76, 199, 116, 0.2);
+    position: relative;
+    padding-left: 25px;
+}
+
+.tips-list li:before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.tips-list li:last-child {
+    border-bottom: none;
+}
+
+/* Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive hover effects */
+@media (max-width: 768px) {
+    .apply-form-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+    
+    .scheme-info-card:hover, .tips-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced form animations
+    document.querySelectorAll('.form-control').forEach((input, index) => {
+        input.style.opacity = '0';
+        input.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            input.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            input.style.opacity = '1';
+            input.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+    
+    // Form validation enhancement
+    const form = document.querySelector('.application-form');
+    const submitBtn = document.querySelector('.submit-btn');
+    
+    form.addEventListener('submit', function(e) {
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

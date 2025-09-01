@@ -1,0 +1,644 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}AgriGenie AI Assistant - Voice & Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+    .unified-assistant {
+        background: radial-gradient(1200px 600px at 20% 0%, #1f3b24 0%, #15301b 35%, #0f2515 70%, #0b1d10 100%);
+        min-height: 100vh;
+        padding: 20px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    .main-container {
+        background: rgba(13, 29, 17, 0.85);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        overflow: hidden;
+        border: 1px solid rgba(234,255,234,0.06);
+    }
+    .assistant-header {
+        background: linear-gradient(135deg, #2d5a27 0%, #3a6b4a 50%, #2a5133 100%);
+        color: #eaffea;
+        padding: 30px;
+        text-align: center;
+        border-bottom: 2px solid rgba(234,255,234,0.15);
+    }
+    .assistant-header h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
+    .assistant-header p { font-size: 1.1rem; opacity: 0.9; }
+    .feature-badges { margin-top: 16px; }
+    .feature-badge {
+        display: inline-block;
+        background: rgba(234,255,234,0.12);
+        color: #eaffea;
+        padding: 8px 14px;
+        border-radius: 18px;
+        margin: 4px;
+        font-size: 0.9rem;
+        border: 1px solid rgba(234,255,234,0.22);
+    }
+    .chat-container { display: flex; height: 600px; }
+    .chat-main { flex: 2; display: flex; flex-direction: column; border-right: 1px solid rgba(42,81,51,0.25); }
+    .chat-sidebar { flex: 1; background: #0f2316; padding: 20px; overflow-y: auto; }
+    .chat-messages { flex: 1; padding: 20px; overflow-y: auto; background: linear-gradient(135deg, rgba(42,81,51,0.15) 0%, rgba(21,48,27,0.25) 100%); }
+    .message { margin-bottom: 20px; display: flex; align-items: flex-start; }
+    .message.user { flex-direction: row-reverse; }
+    .message-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 10px; font-size: 1.2rem; }
+    .message.user .message-avatar { background: linear-gradient(135deg, #2d5a27 0%, #3a6b4a 100%); color: #eaffea; }
+    .message.bot .message-avatar { background: linear-gradient(135deg, #2a5133 0%, #1f3b24 100%); color: #eaffea; }
+    .message-bubble { max-width: 70%; padding: 15px 20px; border-radius: 20px; position: relative; word-wrap: break-word; }
+    .message.user .message-bubble { background: linear-gradient(135deg, #2d5a27 0%, #3a6b4a 100%); color: #eaffea; border-bottom-right-radius: 5px; }
+    .message.bot .message-bubble { background: #0f2316; border: 1px solid rgba(234,255,234,0.08); border-bottom-left-radius: 5px; box-shadow: 0 8px 24px rgba(4,12,7,0.35); }
+    .message-header { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9rem; }
+    .message.user .message-header { justify-content: flex-end; color: rgba(234,255,234,0.85); }
+    .message.bot .message-header { color: #d7f1dc; }
+    .language-badge { background: #2d5a27; color: #eaffea; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; margin-left: 8px; }
+    .message-text { line-height: 1.6; color: #e7f6eb; }
+    .message-actions { margin-top: 10px; display: flex; gap: 10px; }
+    .action-btn { background: none; border: none; color: #d7f1dc; cursor: pointer; padding: 5px; border-radius: 5px; transition: all 0.3s ease; }
+    .action-btn:hover { background: rgba(234,255,234,0.06); color: #eaffea; }
+    .chat-input-container { padding: 20px; background: #0b1d10; border-top: 1px solid rgba(234,255,234,0.08); }
+    .input-group { display: flex; gap: 10px; align-items: center; }
+    .voice-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: linear-gradient(135deg, #2d5a27 0%, #3a6b4a 100%); color: #eaffea; font-size: 1.2rem; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
+    .voice-btn:hover { transform: scale(1.05); box-shadow: 0 10px 28px rgba(45,90,39,0.45); }
+    .voice-btn.recording { background: linear-gradient(135deg, #c0392b 0%, #a93226 100%); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0% { transform: scale(1);} 50% { transform: scale(1.1);} 100% { transform: scale(1);} }
+    .text-input { flex: 1; padding: 15px 20px; border: 2px solid rgba(234,255,234,0.15); border-radius: 25px; font-size: 1rem; transition: all 0.3s ease; color: #eaffea; background: #0f2316; }
+    .text-input:focus { outline: none; border-color: #3a6b4a; box-shadow: 0 0 0 3px rgba(58,107,74,0.25); }
+    .send-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: linear-gradient(135deg, #244a2b 0%, #2d5a27 100%); color: #eaffea; font-size: 1.2rem; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; }
+    .send-btn:hover { transform: scale(1.05); box-shadow: 0 10px 28px rgba(42,81,51,0.45); }
+    .language-selector { margin-bottom: 15px; }
+    .language-selector select { width: 100%; padding: 10px; border: 1px solid rgba(234,255,234,0.14); border-radius: 10px; background: #0b1d10; color: #eaffea; }
+    .voice-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 10px; background: #0b1d10; border-radius: 10px; border: 1px solid rgba(234,255,234,0.1); color: #eaffea; }
+    .toggle-switch { position: relative; width: 50px; height: 24px; background: #23412b; border-radius: 12px; cursor: pointer; transition: background 0.3s ease; }
+    .toggle-switch.active { background: #2d5a27; }
+    .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s ease; }
+    .toggle-switch.active::after { transform: translateX(26px); }
+    .quick-commands { margin-top: 20px; }
+    .quick-command { background: #0b1d10; border: 1px solid rgba(234,255,234,0.1); border-radius: 10px; padding: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s ease; color: #eaffea; }
+    .quick-command:hover { background: #0f2316; border-color: #3a6b4a; }
+    .command-category { font-weight: bold; color: #eaffea; margin-bottom: 5px; }
+    .command-text { font-size: 0.9rem; color: #d7f1dc; }
+    .status-indicator { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; color: #d7f1dc; margin-bottom: 15px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; animation: blink 2s infinite; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0.3; } }
+    .typing-indicator { display: none; align-items: center; gap: 5px; padding: 10px; color: #d7f1dc; background: #0b1d10; border-radius: 1rem; box-shadow: 0 8px 24px rgba(4,12,7,0.35); margin-bottom: 1.5rem; border-bottom-left-radius: 0.25rem; }
+    .typing-dots { display: flex; gap: 3px; }
+    .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: #2d5a27; animation: typing 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 60%, 100% { transform: translateY(0);} 30% { transform: translateY(-10px);} }
+    .welcome-message { text-align: center; padding: 40px 20px; color: #d7f1dc; }
+    .welcome-message h3 { color: #eaffea; margin-bottom: 15px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+    .feature-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0b1d10; border-radius: 10px; border: 1px solid rgba(234,255,234,0.08); color: #eaffea; }
+    .feature-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.9rem; }
+    .feature-icon.weather { background: #296a3b; }
+    .feature-icon.crop { background: #2d5a27; }
+    .feature-icon.soil { background: #3b4a2a; }
+    .feature-icon.pest { background: #365b3f; }
+    .feature-icon.scheme { background: #23412b; }
+    .feature-icon.export { background: #1c3322; }
+    @media (max-width: 768px) {
+        .chat-container { flex-direction: column; height: auto; }
+        .chat-sidebar { order: -1; border-bottom: 1px solid rgba(42,81,51,0.25); }
+        .assistant-header h1 { font-size: 2rem; }
+        .feature-grid { grid-template-columns: 1fr; }
+    }
+    /* Floating agriculture icons */
+    .floating-icons { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .floating-icon { position: absolute; color: rgba(234,255,234,0.18); font-size: 28px; animation: floatY 12s ease-in-out infinite, floatX 22s linear infinite; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); }
+    .floating-icon.small { font-size: 20px; opacity: 0.65; }
+    .floating-icon.large { font-size: 36px; opacity: 0.45; }
+    @keyframes floatY { 0%, 100% { transform: translateY(0px) rotate(0deg);} 50% { transform: translateY(-25px) rotate(8deg);} }
+    @keyframes floatX { 0% { left: -10%; } 100% { left: 110%; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="unified-assistant">
+    <div class="floating-icons">
+        <i class="floating-icon small fas fa-seedling" style="top:10%; left:-5%"></i>
+        <i class="floating-icon fas fa-tractor" style="top:25%; left:-15%; animation-duration: 26s;"></i>
+        <i class="floating-icon large fas fa-cloud-sun" style="top:40%; left:-12%; animation-duration: 30s;"></i>
+        <i class="floating-icon fas fa-water" style="top:65%; left:-8%; animation-duration: 24s;"></i>
+        <i class="floating-icon small fas fa-wheat-awn" style="top:80%; left:-18%; animation-duration: 28s;"></i>
+    </div>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="assistant-header">
+                <h1><i class="fas fa-robot me-3"></i>AgriGenie AI Assistant</h1>
+                <p>Your multilingual farming companion with voice and chat capabilities</p>
+                <div class="feature-badges">
+                    <span class="feature-badge">🌍 20+ Languages</span>
+                    <span class="feature-badge">🎤 Voice Commands</span>
+                    <span class="feature-badge">🤖 AI Powered</span>
+                    <span class="feature-badge">🇮🇳 India Focused</span>
+                </div>
+            </div>
+            
+            <!-- Main Chat Interface -->
+            <div class="chat-container">
+                <!-- Chat Messages and Input -->
+                <div class="chat-main">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Welcome Message -->
+                        <div class="welcome-message">
+                            <h3>🌱 Welcome to AgriGenie AI Assistant!</h3>
+                            <p>I'm your expert agricultural companion. I can help you with:</p>
+                            <div class="feature-grid">
+                                <div class="feature-item">
+                                    <div class="feature-icon weather">
+                                        <i class="fas fa-cloud-sun"></i>
+                                    </div>
+                                    <span>Weather & Climate</span>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon crop">
+                                        <i class="fas fa-seedling"></i>
+                                    </div>
+                                    <span>Crop Management</span>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon soil">
+                                        <i class="fas fa-leaf"></i>
+                                    </div>
+                                    <span>Soil Health</span>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon pest">
+                                        <i class="fas fa-bug"></i>
+                                    </div>
+                                    <span>Pest Control</span>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon scheme">
+                                        <i class="fas fa-hand-holding-usd"></i>
+                                    </div>
+                                    <span>Government Schemes</span>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon export">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                    <span>Export Opportunities</span>
+                                </div>
+                            </div>
+                            <p><strong>Try saying:</strong> "What's the weather like today?" or "Help me choose crops for this season"</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Typing Indicator -->
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="message-avatar bot-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                        <span>AgriGenie is typing...</span>
+                    </div>
+                    
+                    <!-- Chat Input -->
+                    <div class="chat-input-container">
+                        <div class="input-group">
+                            <button class="voice-btn" id="voiceBtn" title="Voice Input">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <input type="text" class="text-input" id="messageInput" placeholder="Type your message or use voice...">
+                            <button class="send-btn" id="sendBtn" title="Send Message">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="chat-sidebar">
+                    <!-- Status -->
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span id="statusText">AgriGenie AI is online</span>
+                    </div>
+                    
+                    <!-- Language Selector -->
+                    <div class="language-selector">
+                        <label for="languageSelect" class="form-label">🌍 Language</label>
+                        <select id="languageSelect" class="form-select">
+                            <option value="">Auto-detect</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Voice Toggle -->
+                    <div class="voice-toggle">
+                        <span>🎤 Voice Response</span>
+                        <div class="toggle-switch" id="voiceToggle">
+                            <input type="checkbox" id="voiceToggleInput" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Commands -->
+                    <div class="quick-commands">
+                        <h6>💡 Quick Commands</h6>
+                        <div id="quickCommandsList">
+                            <!-- Quick commands will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Audio element for voice playback -->
+<audio id="voiceAudio" style="display: none;"></audio>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+class AgriGenieAssistant {
+    constructor() {
+        this.isRecording = false;
+        this.voiceEnabled = false;
+        this.currentLanguage = '';
+        this.conversationHistory = [];
+        
+        this.initializeElements();
+        this.loadLanguages();
+        this.loadQuickCommands();
+        this.setupEventListeners();
+        this.updateStatus();
+    }
+    
+    initializeElements() {
+        this.chatMessages = document.getElementById('chatMessages');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendBtn = document.getElementById('sendBtn');
+        this.voiceBtn = document.getElementById('voiceBtn');
+        this.voiceToggle = document.getElementById('voiceToggle');
+        this.voiceToggleInput = document.getElementById('voiceToggleInput');
+        this.languageSelect = document.getElementById('languageSelect');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.voiceAudio = document.getElementById('voiceAudio');
+        this.statusText = document.getElementById('statusText');
+        this.quickCommandsList = document.getElementById('quickCommandsList');
+        this.recognition = null;
+    }
+    
+    setupEventListeners() {
+        // Send button
+        this.sendBtn.addEventListener('click', () => this.sendMessage());
+        
+        // Enter key
+        this.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.sendMessage();
+            }
+        });
+        
+        // Voice button
+        this.voiceBtn.addEventListener('click', () => this.toggleVoiceRecording());
+        
+        // Voice toggle
+        this.voiceToggle.addEventListener('click', () => this.toggleVoiceResponse());
+        
+        // Language selector
+        this.languageSelect.addEventListener('change', (e) => {
+            this.currentLanguage = e.target.value;
+        });
+    }
+    
+    async loadLanguages() {
+        try {
+            const response = await fetch('/voice/languages/');
+            const data = await response.json();
+            
+            this.languageSelect.innerHTML = '<option value="">🌍 Auto-detect</option>';
+            data.languages.forEach(lang => {
+                const option = document.createElement('option');
+                option.value = lang.code;
+                option.textContent = `${lang.flag} ${lang.name}`;
+                this.languageSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Error loading languages:', error);
+        }
+    }
+    
+    async loadQuickCommands() {
+        try {
+            const response = await fetch('/voice/commands/');
+            const data = await response.json();
+            
+            this.quickCommandsList.innerHTML = '';
+            data.commands.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'mb-3';
+                
+                const categoryTitle = document.createElement('div');
+                categoryTitle.className = 'command-category';
+                categoryTitle.textContent = category.category;
+                categoryDiv.appendChild(categoryTitle);
+                
+                category.commands.forEach(command => {
+                    const commandDiv = document.createElement('div');
+                    commandDiv.className = 'quick-command';
+                    commandDiv.innerHTML = `
+                        <div class="command-text">${command}</div>
+                    `;
+                    commandDiv.addEventListener('click', () => {
+                        this.messageInput.value = command;
+                        this.sendMessage();
+                    });
+                    categoryDiv.appendChild(commandDiv);
+                });
+                
+                this.quickCommandsList.appendChild(categoryDiv);
+            });
+        } catch (error) {
+            console.error('Error loading quick commands:', error);
+        }
+    }
+    
+    async sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message) return;
+        
+        // Add user message to chat
+        this.addMessage(message, 'user');
+        this.messageInput.value = '';
+        
+        // Show typing indicator
+        this.showTypingIndicator();
+        
+        try {
+            const response = await fetch('/voice/chat/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    message: message,
+                    language: this.currentLanguage,
+                    voice_enabled: this.voiceEnabled
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // Add bot response
+                this.addMessage(data.response, 'bot', data.language_info);
+                
+                // Request TTS playback if enabled
+                if (this.voiceEnabled) {
+                    const lang = (data.language_info && data.language_info.response_lang_code) ? data.language_info.response_lang_code : 'en';
+                    this.playTextAsVoice(data.response, lang);
+                }
+            } else {
+                const err = data && data.error ? data.error : 'Unknown error';
+                this.addMessage('Sorry, I encountered an error: ' + err, 'bot');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            this.addMessage('Sorry, I\'m having trouble connecting. Please check your internet connection.', 'bot');
+        } finally {
+            this.hideTypingIndicator();
+        }
+    }
+    
+    addMessage(text, sender, languageInfo = null) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = sender === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        
+        const header = document.createElement('div');
+        header.className = 'message-header';
+        
+        if (sender === 'user') {
+            header.innerHTML = `
+                <span>You</span>
+                <span class="language-badge">${languageInfo ? languageInfo.input_language : 'Auto'}</span>
+            `;
+        } else {
+            header.innerHTML = `
+                <span>AgriGenie AI</span>
+                <span class="language-badge">${languageInfo ? languageInfo.response_language : 'English'}</span>
+            `;
+        }
+        
+        const messageText = document.createElement('div');
+        messageText.className = 'message-text';
+        messageText.textContent = text;
+        
+        bubble.appendChild(header);
+        bubble.appendChild(messageText);
+        
+        // Add voice play button for bot messages
+        if (sender === 'bot' && this.voiceEnabled) {
+            const actions = document.createElement('div');
+            actions.className = 'message-actions';
+            actions.innerHTML = `
+                <button class="action-btn" onclick="assistant.playTextAsVoice('${text.replace(/'/g, "\\'")}', '${languageInfo ? languageInfo.response_lang_code : 'en'}')" title="Play Voice">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            `;
+            bubble.appendChild(actions);
+        }
+        
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(bubble);
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+    
+    showTypingIndicator() {
+        this.typingIndicator.style.display = 'flex';
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+    
+    hideTypingIndicator() {
+        this.typingIndicator.style.display = 'none';
+    }
+    
+    toggleVoiceRecording() {
+        if (this.isRecording) {
+            this.stopRecording();
+        } else {
+            this.startRecording();
+        }
+    }
+    
+    startRecording() {
+        // Use Web Speech API if available
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            try {
+                this.recognition = new SpeechRecognition();
+                this.recognition.continuous = false;
+                this.recognition.interimResults = false;
+                // Use selected language or default
+                const langSel = document.getElementById('languageSelect');
+                const lang = langSel && langSel.value ? langSel.value : 'en-IN';
+                this.recognition.lang = lang;
+
+                this.recognition.onstart = () => {
+                    this.isRecording = true;
+                    this.voiceBtn.classList.add('recording');
+                    this.voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+                    this.statusText.textContent = 'Listening... Speak now!';
+                };
+                this.recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    this.messageInput.value = transcript;
+                    this.sendMessage();
+                };
+                this.recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    // Fallback to backend mock on error
+                    this.processVoiceInput();
+                };
+                this.recognition.onend = () => {
+                    this.stopRecording();
+                };
+                this.recognition.start();
+            } catch (e) {
+                console.error('Failed to start recognition:', e);
+                this.processVoiceInput();
+            }
+        } else {
+            // No Web Speech API; fallback to backend mock
+            this.isRecording = true;
+            this.voiceBtn.classList.add('recording');
+            this.voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            this.statusText.textContent = 'Listening... (simulated)';
+            setTimeout(() => this.stopRecording(), 1200);
+        }
+    }
+
+    stopRecording() {
+        if (this.recognition) {
+            try { this.recognition.stop(); } catch (e) {}
+            this.recognition = null;
+        }
+        this.isRecording = false;
+        this.voiceBtn.classList.remove('recording');
+        this.voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        this.statusText.textContent = 'AgriGenie AI is online';
+        // If no transcript was captured (fallback path), query backend mock
+        if (!this.messageInput.value) {
+            this.processVoiceInput();
+        }
+    }
+    
+    async processVoiceInput() {
+        try {
+            const response = await fetch('/voice/voice/input/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    language: this.languageSelect.value || 'en-IN'
+                })
+            });
+            
+            const data = await response.json();
+            if (data && data.text) {
+                this.messageInput.value = data.text;
+                this.sendMessage();
+            }
+        } catch (error) {
+            console.error('Error processing voice input:', error);
+        }
+    }
+    
+    toggleVoiceResponse() {
+        this.voiceEnabled = !this.voiceEnabled;
+        this.voiceToggle.classList.toggle('active', this.voiceEnabled);
+        this.voiceToggleInput.checked = this.voiceEnabled;
+    }
+    
+    async playTextAsVoice(text, language = 'en') {
+        try {
+            const response = await fetch('/voice/voice/response/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    text: text,
+                    language: language
+                })
+            });
+            
+            if (response.ok) {
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                this.voiceAudio.src = audioUrl;
+                this.voiceAudio.play();
+            }
+        } catch (error) {
+            console.error('Error playing voice:', error);
+        }
+    }
+    
+    playVoiceResponse(audioData) {
+        const audioBlob = new Blob([audioData], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        this.voiceAudio.src = audioUrl;
+        this.voiceAudio.play();
+    }
+    
+    updateStatus() {
+        // Update status periodically
+        setInterval(async () => {
+            try {
+                const response = await fetch('/voice/status/');
+                const data = await response.json();
+                this.statusText.textContent = `AgriGenie AI is online (${data.language_name})`;
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }, 30000);
+    }
+    
+    getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+}
+
+// Initialize the assistant when the page loads
+let assistant;
+document.addEventListener('DOMContentLoaded', () => {
+    assistant = new AgriGenieAssistant();
+});
+</script>
+{% endblock %}

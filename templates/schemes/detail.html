@@ -1,0 +1,422 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ scheme.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2 text-success dashboard-title">
+            <i class="fas fa-university me-2"></i>{{ scheme.name }}
+        </h1>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success scheme-badge">{{ scheme.get_category_display }}</span>
+            <span class="badge bg-success">Active</span>
+        </div>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{% url 'schemes_list' %}" class="btn btn-outline-secondary back-btn">
+                <i class="fas fa-arrow-left me-1"></i>Back to Schemes
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <!-- Description -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-info-circle me-2"></i>Description
+                </h5>
+                <p class="card-text">{{ scheme.description }}</p>
+            </div>
+        </div>
+
+        <!-- Benefits -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-gift me-2"></i>Benefits
+                </h5>
+                <p class="card-text">{{ scheme.benefits }}</p>
+            </div>
+        </div>
+
+        <!-- Eligibility -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-user-check me-2"></i>Eligibility Criteria
+                </h5>
+                <p class="card-text">{{ scheme.eligibility }}</p>
+            </div>
+        </div>
+
+        <!-- Application Process -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-clipboard-list me-2"></i>Application Process
+                </h5>
+                <p class="card-text">{{ scheme.application_process }}</p>
+            </div>
+        </div>
+
+        <!-- Required Documents -->
+        <div class="card detail-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-file-alt me-2"></i>Documents Required
+                </h5>
+                <p class="card-text">{{ scheme.documents_required }}</p>
+            </div>
+        </div>
+
+        <!-- Apply Section -->
+        <div class="card apply-card mb-4">
+            <div class="card-body text-center">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-paper-plane me-2"></i>Ready to Apply?
+                </h5>
+                <p class="card-text">Click below to apply for this government scheme</p>
+                
+                {% if user_application %}
+                    <!-- User has already applied -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You have already applied for this scheme.
+                        <br>
+                        <strong>Status:</strong> {{ user_application.get_status_display }}
+                        <br>
+                        <strong>Applied on:</strong> {{ user_application.application_date|date:"M d, Y" }}
+                    </div>
+                    <a href="{% url 'my_applications' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-list me-2"></i>View My Applications
+                    </a>
+                {% else %}
+                    <!-- User can apply -->
+                    <a href="{% url 'apply_scheme' scheme.id %}" class="btn btn-success btn-lg apply-btn">
+                        <i class="fas fa-paper-plane me-2"></i>Apply for This Scheme
+                    </a>
+                    <p class="text-muted small mt-2">
+                        <i class="fas fa-info-circle me-1"></i>Complete the application form with your details
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Contact Information -->
+        <div class="card sidebar-card mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-phone me-2"></i>Contact Information
+                </h5>
+                <p class="card-text">{{ scheme.contact_info }}</p>
+                {% if scheme.website_url %}
+                <div class="d-grid gap-2">
+                    <a href="{{ scheme.website_url }}" target="_blank" class="btn btn-primary btn-sm sidebar-btn">
+                        <i class="fas fa-globe me-1"></i>Visit Official Website
+                    </a>
+                    <a href="{{ scheme.website_url }}" target="_blank" class="btn btn-success sidebar-btn">
+                        <i class="fas fa-paper-plane me-1"></i>Apply for This Scheme
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    Application link not available. Please contact the authorities for application details.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Scheme Details -->
+        <div class="card sidebar-card">
+            <div class="card-body">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-clipboard me-2"></i>Scheme Details
+                </h5>
+                <div class="scheme-details">
+                    <div class="detail-item">
+                        <strong class="text-success">Category:</strong>
+                        <span>{{ scheme.get_category_display }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong class="text-success">Status:</strong>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="detail-item">
+                        <strong class="text-success">Added:</strong>
+                        <span>{{ scheme.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhanced Scheme Detail Page Styles */
+.dashboard-title {
+    animation: slideInLeft 0.8s ease-out;
+    transform: translateZ(25px);
+    text-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.scheme-badge {
+    transition: all 0.3s ease;
+    transform: translateZ(5px);
+}
+
+.scheme-badge:hover {
+    transform: translateZ(15px) scale(1.1);
+    box-shadow: 0 4px 8px rgba(76, 199, 116, 0.3);
+}
+
+.back-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 
+        0 4px 0 rgba(0,0,0,0.2),
+        0 6px 15px rgba(0,0,0,0.2);
+}
+
+.back-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    background-color: #4caf50;
+    border-color: #4caf50;
+    color: white;
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.4),
+        0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.detail-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(76, 199, 116, 0.1), transparent);
+    transition: left 0.6s ease;
+}
+
+.detail-card:hover::before {
+    left: 100%;
+}
+
+.detail-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.apply-card {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border: 2px solid #4caf50;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(25px);
+    box-shadow: 
+        0 10px 0 rgba(76, 175, 80, 0.2),
+        0 15px 35px rgba(76, 175, 80, 0.2);
+}
+
+.apply-card:hover {
+    transform: translateY(-10px) translateZ(40px) scale(1.05);
+    box-shadow: 
+        0 20px 0 rgba(76, 175, 80, 0.3),
+        0 25px 50px rgba(76, 175, 80, 0.3);
+}
+
+.apply-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(30px);
+    box-shadow: 
+        0 8px 0 rgba(40, 167, 69, 0.4),
+        0 12px 25px rgba(40, 167, 69, 0.4);
+}
+
+.apply-btn:hover {
+    transform: translateY(-8px) translateZ(40px) scale(1.05);
+    box-shadow: 
+        0 16px 0 rgba(40, 167, 69, 0.5),
+        0 20px 40px rgba(40, 167, 69, 0.5);
+}
+
+.apply-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.apply-btn:hover::before {
+    left: 100%;
+}
+
+.sidebar-card {
+    background: linear-gradient(135deg, #f8fff9 0%, #e8f5e9 100%);
+    border: 1px solid #c8e6c9;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(20px);
+    box-shadow: 
+        0 8px 0 rgba(76, 175, 80, 0.1),
+        0 12px 25px rgba(76, 175, 80, 0.1);
+}
+
+.sidebar-card:hover {
+    transform: translateY(-8px) translateZ(35px) scale(1.03);
+    box-shadow: 
+        0 16px 0 rgba(76, 175, 80, 0.2),
+        0 20px 40px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.sidebar-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    transform: translateZ(20px);
+    box-shadow: 
+        0 6px 0 rgba(0,0,0,0.2),
+        0 8px 20px rgba(0,0,0,0.2);
+}
+
+.sidebar-btn:hover {
+    transform: translateY(-6px) translateZ(30px) scale(1.05);
+    box-shadow: 
+        0 12px 0 rgba(0,0,0,0.25),
+        0 15px 30px rgba(0,0,0,0.25);
+}
+
+.sidebar-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.sidebar-btn:hover::before {
+    left: 100%;
+}
+
+.scheme-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(76, 199, 116, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+    transition: all 0.3s ease;
+}
+
+.detail-item:hover {
+    background: rgba(76, 199, 116, 0.15);
+    transform: translateX(5px);
+}
+
+/* Animations */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive hover effects */
+@media (max-width: 768px) {
+    .detail-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+    
+    .apply-card:hover {
+        transform: translateY(-5px) scale(1.02);
+    }
+    
+    .sidebar-card:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced card animations
+    document.querySelectorAll('.detail-card, .sidebar-card').forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, 100 * index);
+    });
+    
+    // Enhanced apply card animation
+    const applyCard = document.querySelector('.apply-card');
+    if (applyCard) {
+        applyCard.style.opacity = '0';
+        applyCard.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            applyCard.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            applyCard.style.opacity = '1';
+            applyCard.style.transform = 'translateY(0)';
+        }, 300);
+    }
+});
+</script>
+{% endblock %}
+

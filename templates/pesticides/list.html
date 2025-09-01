@@ -1,0 +1,150 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Pesticides{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2 text-success dashboard-title">
+        <i class="fas fa-spray-can me-2"></i>Pesticides
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary refresh-btn" onclick="location.reload()">
+                <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+        </div>
+    </div>
+</div>
+<p class="text-muted">Browse and learn about various pesticides for crop protection</p>
+
+<!-- Category Filter -->
+<div class="card mb-4 hover-card">
+    <div class="card-body">
+        <h5 class="card-title text-success"><i class="fas fa-filter me-2"></i>Filter by Category</h5>
+        <div class="btn-group" role="group">
+            <a href="{% url 'pesticides_list' %}" class="btn btn-outline-success {% if not selected_category %}active{% endif %}">
+                All Pesticides
+            </a>
+            {% for category_code, category_name in categories %}
+            <a href="{% url 'pesticides_list' %}?category={{ category_code }}" 
+               class="btn btn-outline-success {% if selected_category == category_code %}active{% endif %}">
+                {{ category_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Pesticides List -->
+{% if pesticides %}
+    <div class="row g-4">
+        {% for pesticide in pesticides %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 feature-card hover-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title text-success">{{ pesticide.name }}</h5>
+                        <div>
+                            <span class="badge bg-primary">{{ pesticide.get_category_display }}</span>
+                            {% if pesticide.is_organic %}
+                            <span class="badge bg-success">Organic</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <p class="card-text text-muted">{{ pesticide.description|truncatewords:15 }}</p>
+                    <div class="small text-muted mb-2">
+                        <strong>Active Ingredient:</strong> {{ pesticide.active_ingredient }}
+                    </div>
+                    <div class="small text-muted mb-3">
+                        <strong>Target:</strong> {{ pesticide.target_pests|truncatewords:8 }}
+                    </div>
+                    <div class="d-flex gap-2 mt-auto">
+                        <a href="{% url 'pesticide_detail' pesticide.id %}" class="btn btn-primary btn-sm feature-btn">View Details</a>
+                        {% if pesticide.price_range %}
+                        <span class="btn btn-outline-info btn-sm">{{ pesticide.price_range }}</span>
+                        {% endif %}
+                        <a href="https://www.amazon.in/s?k={{ pesticide.name }}+{{ pesticide.active_ingredient }}+pesticide" target="_blank" class="btn btn-success btn-sm feature-btn">
+                            <i class="fas fa-shopping-cart me-1"></i>Buy Now
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <div class="d-flex justify-content-between">
+                        <span>By: {{ pesticide.manufacturer }}</span>
+                        <span>{{ pesticide.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card hover-card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-0">
+                {% if selected_category %}
+                    No pesticides found in the "{{ selected_category }}" category.
+                {% else %}
+                    No pesticides available at the moment.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+/* Enhanced Dashboard Styles */
+.hover-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,.125);
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,.1);
+    border-color: rgba(76, 175, 80, 0.5);
+}
+
+.feature-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-card .card-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.feature-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    box-shadow: 0 8px 0 rgba(76, 175, 80, 0.4), 0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.refresh-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(15px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.2), 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.refresh-btn:hover {
+    transform: translateY(-4px) translateZ(25px) scale(1.05);
+    background-color: #4caf50;
+    border-color: #4caf50;
+    color: white;
+    box-shadow: 0 8px 0 rgba(76, 175, 80, 0.4), 0 12px 25px rgba(76, 175, 80, 0.4);
+}
+
+.dashboard-title {
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+</style>
+{% endblock %}

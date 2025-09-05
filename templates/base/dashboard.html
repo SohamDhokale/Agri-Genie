@@ -45,7 +45,11 @@
                 <div id="weather-info">
                     <p>Loading weather data...</p>
                 </div>
-                <a href="{% url 'weather_dashboard' %}" class="btn btn-light btn-sm mt-2 weather-btn">View Details</a>
+                <div class="d-flex gap-2 mt-2">
+                    <a href="{% url 'weather_dashboard' %}" class="btn btn-light btn-sm weather-btn">View Details</a>
+                    <button class="btn btn-outline-success btn-sm" onclick="loadQuarterlyOutlook()"><i class="fas fa-calendar-alt me-1"></i>12-Month Outlook</button>
+                </div>
+                <div class="small mt-2" id="quarterly-outlook"></div>
             </div>
         </div>
     </div>
@@ -111,6 +115,37 @@
                 <h5 class="card-title">Crop Recommendation</h5>
                 <p class="card-text text-muted">Get AI-powered suggestions for optimal crop selection.</p>
                 <a href="{% url 'crop_recommendation' %}" class="btn btn-success feature-btn">Get Recommendations</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card hover-card">
+            <div class="card-body">
+                <h5 class="card-title d-flex align-items-center"><i class="fas fa-seedling me-2 text-success"></i>AI Yield & Optimization</h5>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <input class="form-control form-control-sm" id="ai-state" placeholder="State" value="{{ user.state|default:'Maharashtra' }}">
+                    </div>
+                    <div class="col-6">
+                        <input type="number" step="0.1" class="form-control form-control-sm" id="ai-farm" placeholder="Farm Size (ha)" value="{{ user.farm_size|default:2 }}">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" step="0.1" class="form-control form-control-sm" id="ai-ph" placeholder="pH" value="6.5">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" step="0.1" class="form-control form-control-sm" id="ai-temp" placeholder="Temp °C" value="26">
+                    </div>
+                    <div class="col-4">
+                        <input type="number" step="0.1" class="form-control form-control-sm" id="ai-rain" placeholder="Rain mm" value="60">
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-success btn-sm" onclick="runYieldAI()"><i class="fas fa-magic me-1"></i>Predict</button>
+                    <button class="btn btn-outline-success btn-sm" onclick="runOptimizeAI()"><i class="fas fa-chart-line me-1"></i>Optimize</button>
+                </div>
+                <div class="mt-2 small" id="ai-yield-results"><em>Enter inputs and click Predict.</em></div>
+                <div class="mt-2 small" id="ai-opt-results"></div>
             </div>
         </div>
     </div>
@@ -495,35 +530,111 @@ function animateCounters() {
 
 function loadWeatherData() {
     const weatherInfo = document.getElementById('weather-info');
-    fetch('/weather/get-weather/', {
-        method: 'POST', 
-        headers: { 
-            'Content-Type': 'application/json', 
-            'X-CSRFToken': getCookie('csrftoken') 
-        },
-        body: JSON.stringify({ location: '{{ user.location|default:"Delhi" }}' })
+    function renderWeather(data){
+        if (data.error) { weatherInfo.innerHTML = '<p class="mb-0">Weather data unavailable</p>'; return; }
+        weatherInfo.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-0">${Math.round(data.temperature)}°C</h4>
+                    <small class="text-capitalize">${data.description}</small>
+                </div>
+                <div class="text-end">
+                    <small>Humidity: ${data.humidity}%</small><br>
+                    <small>Wind: ${data.wind_speed} m/s</small>
+                </div>
+            </div>`;
+    }
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos){
+            fetch('/weather/get-current-location/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+            }).then(r=>r.json()).then(renderWeather).catch(()=>{ weatherInfo.innerHTML = '<p class="mb-0">Weather data unavailable</p>'; });
+        }, function(){
+            fetch('/weather/get-weather/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ location: '{{ user.location|default:"Delhi" }}' })
+            }).then(r=>r.json()).then(renderWeather).catch(()=>{ weatherInfo.innerHTML = '<p class="mb-0">Weather data unavailable</p>'; });
+        });
+    } else {
+        fetch('/weather/get-weather/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ location: '{{ user.location|default:"Delhi" }}' })
+        }).then(r=>r.json()).then(renderWeather).catch(()=>{ weatherInfo.innerHTML = '<p class="mb-0">Weather data unavailable</p>'; });
+    }
+}
+
+function runYieldAI() {
+    const state = document.getElementById('ai-state').value;
+    const farm = parseFloat(document.getElementById('ai-farm').value || '1');
+    const ph = parseFloat(document.getElementById('ai-ph').value || '6.5');
+    const temp = parseFloat(document.getElementById('ai-temp').value || '25');
+    const rain = parseFloat(document.getElementById('ai-rain').value || '50');
+    const out = document.getElementById('ai-yield-results');
+    out.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Predicting...';
+
+    fetch('/crops/api/predict-yield/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ state: state, farm_size: farm, soil_ph: ph, temperature: temp, rainfall: rain })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
-        if (data.error) {
-            weatherInfo.innerHTML = '<p class="mb-0">Weather data unavailable</p>';
-        } else {
-            weatherInfo.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h4 class="mb-0">${Math.round(data.temperature)}°C</h4>
-                        <small class="text-capitalize">${data.description}</small>
-                    </div>
-                    <div class="text-end">
-                        <small>Humidity: ${data.humidity}%</small><br>
-                        <small>Wind: ${data.wind_speed} m/s</small>
-                    </div>
-                </div>`;
-        }
+        if (data.error) { out.textContent = data.error; return; }
+        const rows = (data.results || []).slice(0, 5).map(x => `${x.crop_name}: ${x.expected_yield_tons} t, ₹${x.expected_profit.toLocaleString()}`);
+        out.innerHTML = rows.length ? `<ul class="mb-0 ps-3"><li>${rows.join('</li><li>')}</li></ul>` : '<em>No suitable crops found.</em>';
     })
-    .catch(() => {
-        weatherInfo.innerHTML = '<p class="mb-0">Weather data unavailable</p>';
-    });
+    .catch(() => { out.textContent = 'Prediction failed'; });
+}
+
+function runOptimizeAI() {
+    const state = document.getElementById('ai-state').value;
+    const farm = parseFloat(document.getElementById('ai-farm').value || '1');
+    const ph = parseFloat(document.getElementById('ai-ph').value || '6.5');
+    const temp = parseFloat(document.getElementById('ai-temp').value || '25');
+    const rain = parseFloat(document.getElementById('ai-rain').value || '50');
+    const out = document.getElementById('ai-opt-results');
+    out.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Optimizing...';
+
+    fetch('/crops/api/optimize-allocation/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify({ state: state, farm_size: farm, soil_ph: ph, temperature: temp, rainfall: rain })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) { out.textContent = data.error; return; }
+        const lines = (data.allocations || []).map(a => `${a.crop_name}: ${a.hectares} ha → ${a.expected_yield_tons} t, ₹${a.expected_profit.toLocaleString()}`);
+        const totals = `Total: ${data.total_expected_yield_tons} t, ₹${(data.total_expected_profit||0).toLocaleString()}`;
+        out.innerHTML = (lines.length ? `<div class="mb-1 small">${lines.join('<br>')}</div>` : '<em>No allocation possible.</em>') + `<div class="fw-semibold">${totals}</div>`;
+    })
+    .catch(() => { out.textContent = 'Optimization failed'; });
+}
+
+function loadQuarterlyOutlook(){
+    const out = document.getElementById('quarterly-outlook');
+    out.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Loading outlook...';
+    function call(lat, lon){
+        fetch('/weather/get-annual-outlook/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ latitude: lat, longitude: lon })
+        }).then(r=>r.json()).then(data=>{
+            if (data.error) { out.textContent = data.error; return; }
+            const rows = (data.quarters||[]).map(q=>`Q${q.quarter}: Avg Temp ${q.avg_temp ?? '-'}°C, Total Rain ${q.total_precip ?? '-'} mm`);
+            out.innerHTML = rows.length ? `<ul class="mb-0 ps-3"><li>${rows.join('</li><li>')}</li></ul>` : '<em>No outlook available.</em>';
+        }).catch(()=>{ out.textContent = 'Failed to load outlook'; });
+    }
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos){
+            call(pos.coords.latitude, pos.coords.longitude);
+        }, function(){ out.textContent = 'Location permission denied.'; });
+    } else {
+        out.textContent = 'Geolocation not supported.';
+    }
 }
 
 function getCookie(name) {

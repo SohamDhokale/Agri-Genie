@@ -165,6 +165,16 @@ def get_weather_data(request):
             data = json.loads(request.body)
             lat = data.get('latitude')
             lon = data.get('longitude')
+            # Backward compatible: accept 'location' string and geocode if provided
+            location_name = data.get('location')
+            if (not lat or not lon) and location_name:
+                try:
+                    geolocator = Nominatim(user_agent="agrigenie_weather_geocode")
+                    loc = geolocator.geocode(location_name, timeout=10)
+                    if loc:
+                        lat, lon = loc.latitude, loc.longitude
+                except Exception:
+                    pass
             
             if not lat or not lon:
                 return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
@@ -216,6 +226,64 @@ def get_weather_data(request):
         except Exception as e:
             return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
     
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+def get_annual_outlook(request):
+    """Return 12-month outlook aggregated into 4 quarters (3 months each) using OpenMeteo monthly means."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            lat = data.get('latitude')
+            lon = data.get('longitude')
+            if not lat or not lon:
+                return JsonResponse({'error': 'Latitude and longitude are required'}, status=400)
+            
+            # Open-Meteo Climate API for monthly means (temperature and precipitation)
+            url = 'https://climate-api.open-meteo.com/v1/climate'
+            params = {
+                'latitude': lat,
+                'longitude': lon,
+                'start_year': 2024,
+                'end_year': 2024,
+                'models': 'ERA5',
+                'monthly': 'temperature_2m_mean,precipitation_sum',
+                'timezone': 'auto'
+            }
+            resp = requests.get(url, params=params, timeout=20)
+            if resp.status_code != 200:
+                return JsonResponse({'error': 'Unable to fetch annual outlook'}, status=502)
+            data = resp.json()
+            times = data.get('monthly', {}).get('time', [])
+            temps = data.get('monthly', {}).get('temperature_2m_mean', [])
+            precs = data.get('monthly', {}).get('precipitation_sum', [])
+            
+            # Build 12 months; if fewer are returned, pad with last known
+            months = []
+            for i in range(12):
+                t = temps[i] if i < len(temps) else temps[-1] if temps else None
+                p = precs[i] if i < len(precs) else precs[-1] if precs else None
+                months.append({'month_index': i+1, 'temp_mean': t, 'precip_sum': p})
+            
+            # Group into quarters (3 months each)
+            quarters = []
+            for q in range(4):
+                segment = months[q*3:(q+1)*3]
+                seg_t = [m['temp_mean'] for m in segment if m['temp_mean'] is not None]
+                seg_p = [m['precip_sum'] for m in segment if m['precip_sum'] is not None]
+                q_obj = {
+                    'quarter': q+1,
+                    'avg_temp': round(sum(seg_t)/len(seg_t), 1) if seg_t else None,
+                    'total_precip': round(sum(seg_p), 1) if seg_p else None,
+                    'months': segment
+                }
+                quarters.append(q_obj)
+            return JsonResponse({'quarters': quarters})
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Server error: {str(e)}'}, status=500)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 @login_required

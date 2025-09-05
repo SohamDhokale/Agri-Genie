@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from .models import Crop, CropRecommendation, RecommendedCrop
 from .forms import CropRecommendationForm
 from .utils import CropRecommendationEngine
+from .ai import YieldInput, predict_yield_for_crops, optimize_allocation
 import json
 
 @login_required
@@ -83,3 +84,40 @@ def crop_detail(request, crop_id):
     crop = Crop.objects.get(id=crop_id)
     return render(request, 'crops/crop_detail.html', {'crop': crop})
 
+
+@login_required
+def api_predict_yield(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    try:
+        data = json.loads(request.body)
+        params = YieldInput(
+            state=data.get('state', ''),
+            farm_size=float(data.get('farm_size', 1.0)),
+            soil_ph=float(data.get('soil_ph', 6.5)),
+            temperature=float(data.get('temperature', 25.0)),
+            rainfall=float(data.get('rainfall', 50.0)),
+        )
+        results = predict_yield_for_crops(params)
+        return JsonResponse({'results': results})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+def api_optimize_allocation(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    try:
+        data = json.loads(request.body)
+        params = YieldInput(
+            state=data.get('state', ''),
+            farm_size=float(data.get('farm_size', 1.0)),
+            soil_ph=float(data.get('soil_ph', 6.5)),
+            temperature=float(data.get('temperature', 25.0)),
+            rainfall=float(data.get('rainfall', 50.0)),
+        )
+        result = optimize_allocation(params)
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

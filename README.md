@@ -14,7 +14,7 @@ Agrigenie is a Django-based platform that helps farmers and stakeholders with cr
 
 ### Tech Stack
 - **Backend**: Python 3.12+, Django, Django Rest Framework.
-- **Database**: SQLite.
+- **Database**: PostgreSQl.
 - **Frontend**: Html, CSS ,Javascript.
 
 ### Project Structure
